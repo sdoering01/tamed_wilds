@@ -1,0 +1,65 @@
+<h2 class="page-title mb-2">Exploration</h2>
+
+<div class="mb-4">
+  <div>
+    <progress class="progress progress-warning w-56" value={@energy} max={@max_energy}></progress>
+    <p>Energy: <%= @energy %> / <%= @max_energy %></p>
+
+    <progress class="progress progress-success w-56" value={@health} max={@max_health}></progress>
+    <p>Health: <%= @health %> / <%= @max_health %></p>
+  </div>
+</div>
+
+<div class="flex items-center gap-1">
+  <.link href={~p"/exploration/explore"} method="post" class="btn btn-primary">Explore</.link>
+  <.link href={~p"/exploration/regenerate"} method="post" class="btn btn-primary">DEV: Regenerate Energy of all Users</.link>
+</div>
+
+<%= if @exploration_creature do %>
+  <% creature = TamedWilds.GameResources.Creature.get_by_id(@exploration_creature.creature_id) %>
+  <div class="mt-4">
+    <h3 class="text-lg"><%= creature.name %></h3>
+
+    <%= if @exploration_creature.health > 0 do %>
+      <progress class="progress progress-error w-56" value={@exploration_creature.health} max={@exploration_creature.max_health}></progress>
+      <p>Health: <%= @exploration_creature.health %> / <%= @exploration_creature.max_health %></p>
+      <.link href={~p"/exploration/attack"} method="post" class="btn btn-primary">Attack</.link>
+    <% else %>
+      <p class="text-error">Defeated</p>
+      <div class="flex items-center gap-1">
+        <.link href={~p"/exploration/kill"} method="post" class="btn btn-primary">Kill</.link>
+
+        <%= if @stoneheart_built? do %>
+          <.link href={~p"/exploration/tame"} method="post" class="btn btn-secondary">Tame</.link>
+        <% else %>
+          <div class="tooltip" data-tip="First construct Stonheart in Camp">
+            <.link href={~p"/exploration/tame"} method="post" class="btn btn-secondary" disabled>Tame</.link>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%= if not Enum.empty?(@taming_processes) do %>
+  <hr class="mt-8">
+  <h3 class="text-xl mt-4 mb-2">Taming</h3>
+  <ul>
+    <%= for taming_process <- @taming_processes do %>
+      <% creature = TamedWilds.GameResources.Creature.get_by_id(taming_process.creature_id) %>
+      <% seconds_left = DateTime.diff(taming_process.next_feeding_at, DateTime.utc_now()) %>
+
+      <li>
+        <p><%= creature.name %></p>
+        <progress class="progress progress-primary w-56" value={creature.taming.feedings - taming_process.feedings_left} max={creature.taming.feedings}></progress>
+        <p><%= taming_process.feedings_left %> <%= if taming_process.feedings_left == 1, do: "feeding", else: "feedings" %> left</p>
+        <%= if seconds_left > 0 do %>
+          <.link disabled class="btn btn-primary">Feed Berry (in <%= seconds_left %>s)</.link>
+        <% else %>
+          <.link href={~p"/exploration/taming/feed?id=#{taming_process.id}"} method="post" class="btn btn-primary">Feed Berry</.link>
+        <% end %>
+        <.link href={~p"/exploration/taming/cancel?id=#{taming_process.id}"} method="post" data-confirm={"Do you really want to cancel taming #{creature.name}?"} class="btn btn-secondary">Cancel</.link>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

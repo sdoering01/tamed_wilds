@@ -1,0 +1,21 @@
+<h2 class="page-title mb-2">Inventory</h2>
+<div class="mb-4">
+  <p class="text-sm opacity-75">You can hold a maximum of <b><%= @inventory_size %></b> of each item in your inventory.</p>
+</div>
+
+<%= if Enum.empty?(@inventory_entries) do %>
+  )
+  <p>No items in inventory</p>
+<% else %>
+  <ul>
+    <%= for inventory_entry <- @inventory_entries do %>
+      <% stack_full = inventory_entry.quantity >= @inventory_size %>
+      <li>
+        <span class={stack_full && "text-warning"}><%= inventory_entry.quantity %></span> <%= inventory_entry.item.name %><span
+          :if={stack_full}
+          class="text-warning"
+        > (full)</span>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

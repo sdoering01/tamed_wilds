@@ -1,0 +1,24 @@
+<div class="flex items-center gap-1 mb-2">
+  <button onClick="window.history.go(-1)" class="btn btn-ghost btn-sm btn-square"><span class="hero-chevron-left"></span></button>
+  <h2 class="page-title">
+    Stoneheart
+    <div class={"ml-2 badge badge-primary"}>
+      Level <%= @level %>
+    </div>
+  </h2>
+</div>
+
+<p class="mb-8 opacity-75"><%= TamedWilds.GameResources.Building.get_by_id(1).description %></p>
+
+<h3 class="text-xl mb-2">Tamed Creatures</h3>
+<%= if Enum.empty?(@user_creatures) do %>
+  <p>No creatures tamed yet. <.link href={~p"/exploration"} class="inline-flex items-center text-primary">Go exploring<span class="hero-chevron-right-mini"></span></.link></p>
+<% else %>
+  <ul>
+    <%= for user_creature <- @user_creatures do %>
+      <li>
+        <%= TamedWilds.GameResources.Creature.get_by_id(user_creature.creature_id).name %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

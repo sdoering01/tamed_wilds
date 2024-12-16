@@ -1,0 +1,47 @@
+<h2 class="page-title mb-2">Camp</h2>
+
+<p class="mb-4">This is your camp.</p>
+
+<ul class="space-y-4">
+  <%= for building_entry <- @building_entries do %>
+    <% constructed? = building_entry.level > 0 %>
+    <% can_construct? = not constructed? and TamedWilds.QuantityMap.contains?(@item_quantity_map, building_entry.building.construction_resources) %>
+
+    <li>
+      <.maybe_link href={route_for_building(building_entry.building)} is_link={constructed?} class="card card-compact bg-base-200">
+        <div class="card-body">
+          <div class="flex items-center">
+            <h3 class="card-title !mb-0">
+              <%= building_entry.building.name %>
+              <div class={["badge badge-primary", (not constructed?) && "badge-outline"]}>
+                <%= if constructed?, do: "Level #{building_entry.level}", else: "Not constructed" %>
+              </div>
+            </h3>
+            <span :if={constructed?} class="hero-chevron-right ml-auto"></span>
+          </div>
+
+          <p class="opacity-75"><%= building_entry.building.description %></p>
+
+          <%= if not constructed? do %>
+            <div class="flex justify-between items-center">
+              <ul class="flex gap-2 flex-wrap">
+                <%= for {item_id, need_quantity} <- building_entry.building.construction_resources do %>
+                  <% has_quantity = Map.get(@item_quantity_map, item_id, 0) %>
+                  <% has_enough? = has_quantity >= need_quantity %>
+                  <li class={[has_enough? || "text-warning"]}><%= has_quantity %>/<%= need_quantity %> <%= Item.get_by_id(item_id).name %></li>
+                <% end %>
+              </ul>
+              <.link
+                href={~p"/camp/construct?building_id=#{building_entry.building.id}"}
+                method="post"
+                class={["btn btn-primary btn-sm", can_construct? || "btn-disabled"]}
+                data-confirm="Are you sure you want to construct this building?"
+              >Construct</.link>
+            </div>
+          <% end %>
+        </div>
+      </.maybe_link>
+    </li>
+  <% end %>
+</ul>
+

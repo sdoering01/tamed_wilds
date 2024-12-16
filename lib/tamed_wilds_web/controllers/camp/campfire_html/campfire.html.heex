@@ -1,0 +1,37 @@
+<div class="flex items-center gap-1 mb-2">
+  <.link href={~p"/camp"} class="btn btn-ghost btn-sm btn-square"><span class="hero-chevron-left"></span></.link>
+  <h2 class="page-title">
+    Campfire
+    <div class={"ml-2 badge badge-primary"}>
+      Level <%= @level %>
+    </div>
+  </h2>
+</div>
+
+<p class="mb-4"><%= TamedWilds.GameResources.Building.get_by_id(2).description %></p>
+
+<ul>
+  <%= for recipe <- @recipes do %>
+    <% inventory_full? = Map.get(@item_quantity_map, recipe.result, 0) >= @inventory_size %>
+    <% can_craft? = not inventory_full? and TamedWilds.QuantityMap.contains?(@item_quantity_map, recipe.ingredients) %>
+
+    <li class="card card-compact bg-base-200">
+      <div class="card-body">
+        <h4 class="card-title">
+          <%= TamedWilds.GameResources.Item.get_by_id(recipe.result).name%>
+          <span class={[inventory_full? && "text-warning"]}>(<%= Map.get(@item_quantity_map, recipe.result, 0) %>)</span>
+        </h4>
+        <div class="flex items-center gap-2 justify-between">
+          <ul class="flex gap-2 flex-wrap">
+            <%= for {item_id, need_quantity} <- recipe.ingredients do %>
+              <% has_quantity = Map.get(@item_quantity_map, item_id, 0) %>
+              <% has_enough? = has_quantity >= need_quantity %>
+              <li class={[has_enough? || "text-warning"]}><%= has_quantity %>/<%= need_quantity %> <%= TamedWilds.GameResources.Item.get_by_id(item_id).name %></li>
+            <% end %>
+          </ul>
+          <.link href={~p"/camp/campfire/craft?recipe_id=#{recipe.id}"} method="post" class={["btn btn-primary btn-sm", can_craft? || "btn-disabled"]}>Craft</.link>
+        </div>
+      </div>
+    </li>
+  <% end %>
+</ul>
