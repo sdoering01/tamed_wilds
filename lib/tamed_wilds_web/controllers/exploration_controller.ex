@@ -13,9 +13,9 @@ defmodule TamedWildsWeb.ExplorationController do
     stoneheart_built? = Camp.stoneheart_built?(conn.assigns.current_user)
 
     render(conn, :exploration,
-      energy: attributes.energy,
+      current_energy: attributes.current_energy,
       max_energy: attributes.max_energy,
-      health: attributes.health,
+      current_health: attributes.current_health,
       max_health: attributes.max_health,
       exploration_creature: exploration_creature,
       taming_processes: taming_processes,

@@ -11,10 +11,10 @@ defmodule TamedWilds.UserAttributes do
 
   @primary_key false
   schema "user_attributes" do
-    field :energy, :integer
+    field :current_energy, :integer
     field :max_energy, :integer
 
-    field :health, :integer
+    field :current_health, :integer
     field :max_health, :integer
 
     field :inventory_size, :integer
@@ -33,9 +33,9 @@ defmodule TamedWilds.UserAttributes do
   def reduce_energy(%User{} = user, amount) do
     query =
       from u in UserAttributes,
-        where: u.user_id == ^user.id and u.energy >= ^amount
+        where: u.user_id == ^user.id and u.current_energy >= ^amount
 
-    case Repo.update_all(query, inc: [energy: -amount]) do
+    case Repo.update_all(query, inc: [current_energy: -amount]) do
       {0, _} -> {:error, :not_enough_energy}
       _ -> :ok
     end
@@ -45,11 +45,11 @@ defmodule TamedWilds.UserAttributes do
     query =
       from u in UserAttributes,
         where: u.user_id == ^user.id,
-        update: [set: [health: fragment("greatest(?, ?)", u.health - ^amount, 0)]],
+        update: [set: [current_health: fragment("greatest(?, ?)", u.current_health - ^amount, 0)]],
         select: u
 
     case Repo.update_all(query, []) do
-      {1, [%UserAttributes{health: 0}]} -> {:ok, :dead}
+      {1, [%UserAttributes{current_health: 0}]} -> {:ok, :dead}
       {1, _} -> {:ok, :alive}
     end
   end
@@ -57,8 +57,10 @@ defmodule TamedWilds.UserAttributes do
   def regenerate_energy_of_all_users(by) do
     query =
       from u in UserAttributes,
-        where: u.energy < u.max_energy,
-        update: [set: [energy: fragment("least(?, ?)", u.energy + ^by, u.max_energy)]]
+        where: u.current_energy < u.max_energy,
+        update: [
+          set: [current_energy: fragment("least(?, ?)", u.current_energy + ^by, u.max_energy)]
+        ]
 
     Repo.update_all(query, [])
   end
@@ -66,8 +68,10 @@ defmodule TamedWilds.UserAttributes do
   def regenerate_health_of_all_users(by) do
     query =
       from u in UserAttributes,
-        where: u.health < u.max_health,
-        update: [set: [health: fragment("least(?, ?)", u.health + ^by, u.max_health)]]
+        where: u.current_health < u.max_health,
+        update: [
+          set: [current_health: fragment("least(?, ?)", u.current_health + ^by, u.max_health)]
+        ]
 
     Repo.update_all(query, [])
   end

@@ -187,8 +187,8 @@ defmodule TamedWilds.Exploration do
       %ExplorationCreature{
         creature_res_id: creature.res_id,
         user_id: user.id,
-        health: creature.health,
-        max_health: creature.health
+        health: creature.max_health,
+        max_health: creature.max_health
       }
       |> Repo.insert(on_conflict: :replace_all, conflict_target: [:user_id])
     end

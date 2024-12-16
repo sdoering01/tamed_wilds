@@ -2,11 +2,11 @@
 
 <div class="mb-4">
   <div>
-    <progress class="progress progress-warning w-56" value={@energy} max={@max_energy}></progress>
-    <p>Energy: <%= @energy %> / <%= @max_energy %></p>
+    <progress class="progress progress-warning w-56" value={@current_energy} max={@max_energy}></progress>
+    <p>Energy: <%= @current_energy %> / <%= @max_energy %></p>
 
-    <progress class="progress progress-success w-56" value={@health} max={@max_health}></progress>
-    <p>Health: <%= @health %> / <%= @max_health %></p>
+    <progress class="progress progress-success w-56" value={@current_health} max={@max_health}></progress>
+    <p>Health: <%= @current_health %> / <%= @max_health %></p>
   </div>
 </div>
 
