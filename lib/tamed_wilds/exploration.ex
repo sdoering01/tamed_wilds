@@ -2,14 +2,14 @@ defmodule TamedWilds.Exploration do
   alias Ecto.Repo
   import Ecto.Query
   alias TamedWilds.Repo
-  alias TamedWilds.GameResources.{Item, Creature}
+  alias TamedWilds.GameResources, as: Res
   alias TamedWilds.Accounts.User
   alias TamedWilds.{Inventory, UserAttributes, Creatures}
   alias TamedWilds.Exploration.{ExplorationCreature, UserTamingProcess}
 
-  @loot_table Item.get_all() |> Map.take([2, 3, 4]) |> Map.values()
+  @loot_table Res.Item.get_all() |> Map.take([2, 3, 4]) |> Map.values()
 
-  @creature_table Creature.get_all() |> Map.values()
+  @creature_table Res.Creature.get_all() |> Map.values()
 
   def get_exploration_creature(%User{} = user) do
     ExplorationCreature.by_user(user) |> Repo.one()
@@ -48,11 +48,11 @@ defmodule TamedWilds.Exploration do
         {0, _} ->
           {:error, :no_creature}
 
-        {1, [%ExplorationCreature{creature_id: creature_id, health: new_health}]} ->
+        {1, [%ExplorationCreature{creature_res_id: creature_res_id, health: new_health}]} ->
           if new_health <= 0 do
             {:ok, :creature_defeated}
           else
-            creature = Creature.get_by_id(creature_id)
+            creature = Res.Creature.get_by_res_id(creature_res_id)
 
             case UserAttributes.do_damage(user, creature.damage) do
               {:ok, :dead} ->
@@ -76,8 +76,8 @@ defmodule TamedWilds.Exploration do
         {0, _} ->
           {:error, :no_defeated_creature}
 
-        {1, [%ExplorationCreature{creature_id: creature_id}]} ->
-          creature = Creature.get_by_id(creature_id)
+        {1, [%ExplorationCreature{creature_res_id: creature_res_id}]} ->
+          creature = Res.Creature.get_by_res_id(creature_res_id)
           loot = creature.loot
 
           case Inventory.add_items(user, loot) do
@@ -96,14 +96,14 @@ defmodule TamedWilds.Exploration do
         {0, _} ->
           {:error, :no_defeated_creature}
 
-        {1, [%ExplorationCreature{creature_id: creature_id}]} ->
-          creature = Creature.get_by_id(creature_id)
+        {1, [%ExplorationCreature{creature_res_id: creature_res_id}]} ->
+          creature = Res.Creature.get_by_res_id(creature_res_id)
 
           now = DateTime.utc_now()
 
           user_taming_process = %UserTamingProcess{
             user_id: user.id,
-            creature_id: creature.id,
+            creature_res_id: creature.res_id,
             started_at: now,
             next_feeding_at: DateTime.add(now, creature.taming.feeding_interval_ms, :millisecond),
             feedings_left: creature.taming.feedings
@@ -125,7 +125,7 @@ defmodule TamedWilds.Exploration do
         if DateTime.after?(taming_process.next_feeding_at, now) do
           {:error, :cannot_feed_yet}
         else
-          berry = Item.get_by_id(4)
+          berry = Res.Item.get_by_res_id(4)
 
           Repo.transact(fn ->
             case Inventory.remove_item(user, berry, 1) do
@@ -135,7 +135,7 @@ defmodule TamedWilds.Exploration do
                   # Prevents feeding multiple times
                   |> UserTamingProcess.where_next_feeding_at_before(now)
 
-                creature = Creature.get_by_id(taming_process.creature_id)
+                creature = Res.Creature.get_by_res_id(taming_process.creature_res_id)
 
                 if taming_process.feedings_left <= 1 do
                   {1, _} = Repo.delete_all(query)
@@ -185,7 +185,7 @@ defmodule TamedWilds.Exploration do
       creature = @creature_table |> Enum.random()
 
       %ExplorationCreature{
-        creature_id: creature.id,
+        creature_res_id: creature.res_id,
         user_id: user.id,
         health: creature.health,
         max_health: creature.health

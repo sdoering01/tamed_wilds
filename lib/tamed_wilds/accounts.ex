@@ -355,7 +355,7 @@ defmodule TamedWilds.Accounts do
     Repo.transact(fn ->
       TamedWilds.UserAttributes.initial_setup(user)
 
-      strange_stone = TamedWilds.GameResources.Item.get_by_id(1)
+      strange_stone = TamedWilds.GameResources.Item.get_by_res_id(1)
       :ok = TamedWilds.Inventory.add_item(user, strange_stone, 1)
 
       :ok

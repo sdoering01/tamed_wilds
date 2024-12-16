@@ -3,7 +3,7 @@ defmodule TamedWilds.Inventory do
   import Ecto.Query
 
   alias TamedWilds.Accounts.User
-  alias TamedWilds.GameResources.Item
+  alias TamedWilds.GameResources, as: Res
   alias TamedWilds.Inventory.UserItems
   alias TamedWilds.UserAttributes
 
@@ -12,23 +12,23 @@ defmodule TamedWilds.Inventory do
 
     user_items
     |> Enum.map(fn user_item ->
-      item = Item.get_by_id(user_item.item_id)
+      item = Res.Item.get_by_res_id(user_item.item_res_id)
       %{item: item, quantity: user_item.quantity}
     end)
   end
 
   def get_item_quantity_map(%User{} = user) do
-    UserItems.by_user(user) |> Repo.all() |> Enum.map(&{&1.item_id, &1.quantity}) |> Map.new()
+    UserItems.by_user(user) |> Repo.all() |> Enum.map(&{&1.item_res_id, &1.quantity}) |> Map.new()
   end
 
-  def add_item(%User{} = user, %Item{} = item, quantity) do
+  def add_item(%User{} = user, %Res.Item{} = item, quantity) do
     # Could potentially be a bottleneck If the inventory size is queried for
     # each added item
     %{inventory_size: inventory_size} = UserAttributes.get!(user)
 
     user_items = %UserItems{
       user_id: user.id,
-      item_id: item.id,
+      item_res_id: item.res_id,
       # Cap quantity to inventory_size when adding new items
       quantity: min(quantity, inventory_size)
     }
@@ -44,7 +44,7 @@ defmodule TamedWilds.Inventory do
 
     returned_user_items =
       Repo.insert!(user_items,
-        conflict_target: [:user_id, :item_id],
+        conflict_target: [:user_id, :item_res_id],
         on_conflict: conflict_query,
         # Needed, since the query might fail to insert a new item, If the stac
         # is already full
@@ -72,8 +72,8 @@ defmodule TamedWilds.Inventory do
 
   def add_items(%User{} = user, item_quantity_map) do
     Repo.transact(fn ->
-      Enum.each(item_quantity_map, fn {item_id, quantity} ->
-        item = Item.get_by_id(item_id)
+      Enum.each(item_quantity_map, fn {item_res_id, quantity} ->
+        item = Res.Item.get_by_res_id(item_res_id)
 
         # For now, ignore when the inventory is full
         add_item(user, item, quantity)
@@ -89,8 +89,8 @@ defmodule TamedWilds.Inventory do
 
   def remove_items(%User{} = user, item_quantity_map) do
     Repo.transact(fn ->
-      Enum.each(item_quantity_map, fn {item_id, quantity} ->
-        item = Item.get_by_id(item_id)
+      Enum.each(item_quantity_map, fn {item_res_id, quantity} ->
+        item = Res.Item.get_by_res_id(item_res_id)
 
         case remove_item(user, item, quantity) do
           {:error, :not_enough_items} -> Repo.rollback(:not_enough_items)
@@ -104,10 +104,11 @@ defmodule TamedWilds.Inventory do
     end
   end
 
-  def remove_item(%User{} = user, %Item{} = item, quantity) do
+  def remove_item(%User{} = user, %Res.Item{} = item, quantity) do
     query =
       from ui in UserItems,
-        where: ui.user_id == ^user.id and ui.item_id == ^item.id and ui.quantity >= ^quantity
+        where:
+          ui.user_id == ^user.id and ui.item_res_id == ^item.res_id and ui.quantity >= ^quantity
 
     case Repo.update_all(query, inc: [quantity: -quantity]) do
       {0, _} -> {:error, :not_enough_items}

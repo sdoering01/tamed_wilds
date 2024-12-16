@@ -5,7 +5,7 @@ defmodule TamedWilds.Inventory.UserItems do
 
   schema "user_items" do
     field :quantity, :integer
-    field :item_id, :integer
+    field :item_res_id, :integer
 
     belongs_to :user, TamedWilds.Accounts.User
   end
@@ -14,6 +14,6 @@ defmodule TamedWilds.Inventory.UserItems do
     from ui in UserItems,
       where: ui.user_id == ^user.id,
       where: ui.quantity > 0,
-      order_by: [asc: ui.item_id]
+      order_by: [asc: ui.item_res_id]
   end
 end

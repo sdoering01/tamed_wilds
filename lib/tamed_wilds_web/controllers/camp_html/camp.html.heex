@@ -25,14 +25,14 @@
           <%= if not constructed? do %>
             <div class="flex justify-between items-center">
               <ul class="flex gap-2 flex-wrap">
-                <%= for {item_id, need_quantity} <- building_entry.building.construction_resources do %>
-                  <% has_quantity = Map.get(@item_quantity_map, item_id, 0) %>
+                <%= for {item_res_id, need_quantity} <- building_entry.building.construction_resources do %>
+                  <% has_quantity = Map.get(@item_quantity_map, item_res_id, 0) %>
                   <% has_enough? = has_quantity >= need_quantity %>
-                  <li class={[has_enough? || "text-warning"]}><%= has_quantity %>/<%= need_quantity %> <%= Item.get_by_id(item_id).name %></li>
+                  <li class={[has_enough? || "text-warning"]}><%= has_quantity %>/<%= need_quantity %> <%= Res.Item.get_by_res_id(item_res_id).name %></li>
                 <% end %>
               </ul>
               <.link
-                href={~p"/camp/construct?building_id=#{building_entry.building.id}"}
+                href={~p"/camp/construct?building_res_id=#{building_entry.building.res_id}"}
                 method="post"
                 class={["btn btn-primary btn-sm", can_construct? || "btn-disabled"]}
                 data-confirm="Are you sure you want to construct this building?"

@@ -8,7 +8,7 @@
   </h2>
 </div>
 
-<p class="mb-8 opacity-75"><%= TamedWilds.GameResources.Building.get_by_id(1).description %></p>
+<p class="mb-8 opacity-75"><%= TamedWilds.GameResources.Building.get_by_res_id(1).description %></p>
 
 <h3 class="text-xl mb-2">Tamed Creatures</h3>
 <%= if Enum.empty?(@user_creatures) do %>
@@ -17,7 +17,7 @@
   <ul>
     <%= for user_creature <- @user_creatures do %>
       <li>
-        <%= TamedWilds.GameResources.Creature.get_by_id(user_creature.creature_id).name %>
+        <%= TamedWilds.GameResources.Creature.get_by_res_id(user_creature.creature_res_id).name %>
       </li>
     <% end %>
   </ul>

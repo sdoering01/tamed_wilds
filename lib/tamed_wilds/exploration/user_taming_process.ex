@@ -6,7 +6,7 @@ defmodule TamedWilds.Exploration.UserTamingProcess do
   alias TamedWilds.Accounts.User
 
   schema "user_taming_processes" do
-    field :creature_id, :integer
+    field :creature_res_id, :integer
     field :started_at, :utc_datetime_usec
     field :next_feeding_at, :utc_datetime_usec
     field :feedings_left, :integer

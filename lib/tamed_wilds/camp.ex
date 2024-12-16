@@ -1,6 +1,6 @@
 defmodule TamedWilds.Camp do
   alias TamedWilds.Camp.UserBuilding
-  alias TamedWilds.GameResources.Building
+  alias TamedWilds.GameResources, as: Res
   alias TamedWilds.{Repo, Inventory}
   alias TamedWilds.Accounts.User
 
@@ -8,27 +8,27 @@ defmodule TamedWilds.Camp do
     user_building_levels =
       UserBuilding.by_user(user)
       |> Repo.all()
-      |> Enum.map(fn ub -> {ub.building_id, ub.level} end)
+      |> Enum.map(fn ub -> {ub.building_res_id, ub.level} end)
       |> Map.new()
 
-    buildings = Building.get_all()
+    buildings = Res.Building.get_all()
 
     buildings
     |> Map.values()
     |> Enum.map(fn building ->
-      %{building: building, level: Map.get(user_building_levels, building.id, 0)}
+      %{building: building, level: Map.get(user_building_levels, building.res_id, 0)}
     end)
   end
 
-  def get_building_level(%User{} = user, %Building{} = building) do
-    UserBuilding.level_by_user_and_building_id(user, building.id) |> Repo.one() || 0
+  def get_building_level(%User{} = user, %Res.Building{} = building) do
+    UserBuilding.level_by_user_and_building_res_id(user, building.res_id) |> Repo.one() || 0
   end
 
   def stoneheart_built?(%User{} = user) do
-    get_building_level(user, Building.get_by_id(1)) > 0
+    get_building_level(user, Res.Building.get_by_res_id(1)) > 0
   end
 
-  def construct_building(%User{} = user, %Building{} = building) do
+  def construct_building(%User{} = user, %Res.Building{} = building) do
     target_level = 1
 
     current_level = get_building_level(user, building)
@@ -40,7 +40,7 @@ defmodule TamedWilds.Camp do
         with :ok <- Inventory.remove_items(user, building.construction_resources) do
           Repo.insert!(%UserBuilding{
             user_id: user.id,
-            building_id: building.id,
+            building_res_id: building.res_id,
             level: target_level
           })
 

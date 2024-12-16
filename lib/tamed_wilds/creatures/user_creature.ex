@@ -6,7 +6,7 @@ defmodule TamedWilds.Creatures.UserCreature do
   alias TamedWilds.Accounts.User
 
   schema "user_creatures" do
-    field :creature_id, :integer
+    field :creature_res_id, :integer
     field :name, :string
     field :tamed_at, :utc_datetime_usec
 

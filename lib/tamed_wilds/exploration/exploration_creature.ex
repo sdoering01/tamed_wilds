@@ -6,7 +6,7 @@ defmodule TamedWilds.Exploration.ExplorationCreature do
   alias TamedWilds.Accounts.User
 
   schema "exploration_creatures" do
-    field :creature_id, :integer
+    field :creature_res_id, :integer
     field :health, :integer
     field :max_health, :integer
 

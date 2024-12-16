@@ -1,11 +1,11 @@
 defmodule TamedWilds.Camp.Buildings.Campfire do
   alias TamedWilds.Repo
   alias TamedWilds.Accounts.User
-  alias TamedWilds.GameResources.{CampfireRecipe, Item}
+  alias TamedWilds.GameResources, as: Res
   alias TamedWilds.Inventory
 
-  def craft(%User{} = user, %CampfireRecipe{} = recipe) do
-    result_item = Item.get_by_id(recipe.result)
+  def craft(%User{} = user, %Res.CampfireRecipe{} = recipe) do
+    result_item = Res.Item.get_by_res_id(recipe.result)
 
     Repo.transact(fn ->
       with :ok <- Inventory.remove_items(user, recipe.ingredients),

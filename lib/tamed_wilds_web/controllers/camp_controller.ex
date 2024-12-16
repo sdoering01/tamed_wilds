@@ -2,7 +2,7 @@ defmodule TamedWildsWeb.CampController do
   use TamedWildsWeb, :controller
 
   alias TamedWilds.{Camp, Inventory}
-  alias TamedWilds.GameResources.Building
+  alias TamedWilds.GameResources, as: Res
 
   def index(conn, _params) do
     building_entries = Camp.get_all_buildings(conn.assigns.current_user)
@@ -14,8 +14,8 @@ defmodule TamedWildsWeb.CampController do
     )
   end
 
-  def construct(conn, %{"building_id" => building_id}) do
-    building = building_id |> String.to_integer() |> Building.get_by_id()
+  def construct(conn, %{"building_res_id" => building_res_id}) do
+    building = building_res_id |> String.to_integer() |> Res.Building.get_by_res_id()
 
     conn =
       case Camp.construct_building(conn.assigns.current_user, building) do

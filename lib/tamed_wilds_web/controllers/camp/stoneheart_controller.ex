@@ -1,7 +1,7 @@
 defmodule TamedWildsWeb.Camp.StoneheartController do
-  @stoneheart_id 1
+  @stoneheart_res_id 1
 
-  use TamedWildsWeb.Camp.Helpers.BuildingController, building_id: @stoneheart_id
+  use TamedWildsWeb.Camp.Helpers.BuildingController, building_res_id: @stoneheart_res_id
 
   def index(conn, _params) do
     level = conn.assigns.building_level

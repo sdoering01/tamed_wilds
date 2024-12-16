@@ -5,7 +5,7 @@ defmodule TamedWilds.QuantityMap do
   This module provides functions for working With quantity maps.
   """
 
-  alias TamedWilds.GameResources.Item
+  alias TamedWilds.GameResources, as: Res
 
   @doc """
   Checks If the first quantity map contains the second quantity map.
@@ -27,6 +27,7 @@ defmodule TamedWilds.QuantityMap do
   def to_string(qm, kind)
 
   def to_string(qm, :item) do
-    Enum.map(qm, fn {id, qty} -> "#{qty}x#{Item.get_by_id(id).name}" end) |> Enum.join(", ")
+    Enum.map(qm, fn {res_id, qty} -> "#{qty}x#{Res.Item.get_by_res_id(res_id).name}" end)
+    |> Enum.join(", ")
   end
 end

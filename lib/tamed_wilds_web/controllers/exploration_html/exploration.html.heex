@@ -16,7 +16,7 @@
 </div>
 
 <%= if @exploration_creature do %>
-  <% creature = TamedWilds.GameResources.Creature.get_by_id(@exploration_creature.creature_id) %>
+  <% creature = TamedWilds.GameResources.Creature.get_by_res_id(@exploration_creature.creature_res_id) %>
   <div class="mt-4">
     <h3 class="text-lg"><%= creature.name %></h3>
 
@@ -46,7 +46,7 @@
   <h3 class="text-xl mt-4 mb-2">Taming</h3>
   <ul>
     <%= for taming_process <- @taming_processes do %>
-      <% creature = TamedWilds.GameResources.Creature.get_by_id(taming_process.creature_id) %>
+      <% creature = TamedWilds.GameResources.Creature.get_by_res_id(taming_process.creature_res_id) %>
       <% seconds_left = DateTime.diff(taming_process.next_feeding_at, DateTime.utc_now()) %>
 
       <li>
