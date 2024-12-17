@@ -6,8 +6,8 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
   def index(conn, _params) do
     level = conn.assigns.building_level
 
-    user_creatures = TamedWilds.Creatures.get_user_creatures(conn.assigns.current_user)
+    creatures = TamedWilds.Creatures.get_user_creatures(conn.assigns.current_user)
 
-    render(conn, :stoneheart, level: level, user_creatures: user_creatures)
+    render(conn, :stoneheart, level: level, creatures: creatures)
   end
 end

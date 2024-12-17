@@ -1,0 +1,30 @@
+defmodule TamedWilds.Creatures.Creature do
+  use Ecto.Schema
+  import Ecto.Query
+  import Ecto.Changeset
+
+  alias __MODULE__
+  alias TamedWilds.Accounts.User
+
+  schema "creatures" do
+    field :res_id, :integer
+    field :current_health, :integer
+    field :max_health, :integer
+
+    field :tamed_at, :utc_datetime_usec
+
+    belongs_to :user, User, foreign_key: :tamed_by
+  end
+
+  def tamed_by_user(%User{} = user) do
+    from c in Creature, where: c.tamed_by == ^user.id
+  end
+
+  def delete_by_id_query(id) do
+    from c in Creature, where: c.id == ^id, select: c
+  end
+
+  def tame_changeset(%Creature{} = creature, %User{} = user, tamed_at) do
+    creature |> change(tamed_by: user.id, tamed_at: tamed_at)
+  end
+end

@@ -4,12 +4,10 @@ defmodule TamedWilds.Exploration.ExplorationCreature do
 
   alias __MODULE__
   alias TamedWilds.Accounts.User
+  alias TamedWilds.Creatures.Creature
 
   schema "exploration_creatures" do
-    field :creature_res_id, :integer
-    field :health, :integer
-    field :max_health, :integer
-
+    belongs_to :creature, Creature
     belongs_to :user, User
   end
 
@@ -17,11 +15,34 @@ defmodule TamedWilds.Exploration.ExplorationCreature do
     from ec in ExplorationCreature, where: ec.user_id == ^user.id
   end
 
-  def filter_defeated(%Ecto.Query{} = query) do
-    from ec in query, where: ec.health <= 0
+  def with_creature(%Ecto.Query{} = query) do
+    from ec in query,
+      join: c in assoc(ec, :creature),
+      as: :creature,
+      preload: [creature: c]
   end
 
-  def do_damage(%Ecto.Query{} = query, damage) do
-    from ec in query, update: [set: [health: fragment("greatest(?, ?)", ec.health - ^damage, 0)]]
+  def filter_defeated(%Ecto.Query{} = query) do
+    from [creature: c] in query, where: c.current_health <= 0
+  end
+
+  def delete_defeated_query(%User{} = user) do
+    by_user(user) |> with_creature() |> filter_defeated() |> exclude(:preload) |> select([ec], ec)
+  end
+
+  def associated_creature_query(%User{} = user) do
+    from c in TamedWilds.Creatures.Creature,
+      join: ec in subquery(by_user(user)),
+      where: c.id == ec.creature_id
+  end
+
+  def do_damage_query(%User{} = user, damage) do
+    from c in associated_creature_query(user),
+      update: [
+        set: [
+          current_health: fragment("greatest(?, ?)", c.current_health - ^damage, 0)
+        ]
+      ],
+      select: c
   end
 end

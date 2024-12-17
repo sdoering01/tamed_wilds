@@ -16,13 +16,14 @@
 </div>
 
 <%= if @exploration_creature do %>
-  <% creature = TamedWilds.GameResources.Creature.get_by_res_id(@exploration_creature.creature_res_id) %>
+  <% creature = @exploration_creature.creature %>
+  <% creature_res = TamedWilds.GameResources.Creature.get_by_res_id(creature.res_id) %>
   <div class="mt-4">
-    <h3 class="text-lg"><%= creature.name %></h3>
+    <h3 class="text-lg"><%= creature_res.name %></h3>
 
-    <%= if @exploration_creature.health > 0 do %>
-      <progress class="progress progress-error w-56" value={@exploration_creature.health} max={@exploration_creature.max_health}></progress>
-      <p>Health: <%= @exploration_creature.health %> / <%= @exploration_creature.max_health %></p>
+    <%= if creature.current_health > 0 do %>
+      <progress class="progress progress-error w-56" value={creature.current_health} max={creature.max_health}></progress>
+      <p>Health: <%= creature.current_health %> / <%= creature.max_health %></p>
       <.link href={~p"/exploration/attack"} method="post" class="btn btn-primary">Attack</.link>
     <% else %>
       <p class="text-error">Defeated</p>
@@ -46,19 +47,19 @@
   <h3 class="text-xl mt-4 mb-2">Taming</h3>
   <ul>
     <%= for taming_process <- @taming_processes do %>
-      <% creature = TamedWilds.GameResources.Creature.get_by_res_id(taming_process.creature_res_id) %>
+      <% creature_res = TamedWilds.GameResources.Creature.get_by_res_id(taming_process.creature.res_id) %>
       <% seconds_left = DateTime.diff(taming_process.next_feeding_at, DateTime.utc_now()) %>
 
       <li>
-        <p><%= creature.name %></p>
-        <progress class="progress progress-primary w-56" value={creature.taming.feedings - taming_process.feedings_left} max={creature.taming.feedings}></progress>
+        <p><%= creature_res.name %></p>
+        <progress class="progress progress-primary w-56" value={creature_res.taming.feedings - taming_process.feedings_left} max={creature_res.taming.feedings}></progress>
         <p><%= taming_process.feedings_left %> <%= if taming_process.feedings_left == 1, do: "feeding", else: "feedings" %> left</p>
         <%= if seconds_left > 0 do %>
           <.link disabled class="btn btn-primary">Feed Berry (in <%= seconds_left %>s)</.link>
         <% else %>
           <.link href={~p"/exploration/taming/feed?id=#{taming_process.id}"} method="post" class="btn btn-primary">Feed Berry</.link>
         <% end %>
-        <.link href={~p"/exploration/taming/cancel?id=#{taming_process.id}"} method="post" data-confirm={"Do you really want to cancel taming #{creature.name}?"} class="btn btn-secondary">Cancel</.link>
+        <.link href={~p"/exploration/taming/cancel?id=#{taming_process.id}"} method="post" data-confirm={"Do you really want to cancel taming #{creature_res.name}?"} class="btn btn-secondary">Cancel</.link>
       </li>
     <% end %>
   </ul>
