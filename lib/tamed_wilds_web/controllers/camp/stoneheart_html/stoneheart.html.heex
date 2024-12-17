@@ -10,16 +10,18 @@
 
 <p class="mb-8 opacity-75"><%= TamedWilds.GameResources.Building.get_by_res_id(1).description %></p>
 
-<h3 class="text-xl mb-4">Tamed Creatures</h3>
+<h3 class="text-2xl font-semibold mb-4">Tamed Creatures</h3>
 <%= if Enum.empty?(@creatures) do %>
   <p>No creatures tamed yet. <.link href={~p"/exploration"} class="inline-flex items-center text-primary">Go exploring<span class="hero-chevron-right-mini"></span></.link></p>
 <% else %>
-  <ul>
+  <ul class="flex flex-col gap-4">
     <%= for creature <- @creatures do %>
-      <li class="flex flex-col">
-        <h4 class="text-lg mb-2"><%= TamedWilds.GameResources.Creature.get_by_res_id(creature.res_id).name %></h4>
-        <progress class="progress progress-success w-56" value={creature.current_health} max={creature.max_health}></progress>
-        <p class="mt-1">Health: <%= creature.current_health %>/<%= creature.max_health %></p>
+      <li class="card card-compact bg-base-200 shadow-md">
+        <div class="card-body">
+          <h4 class="card-title"><%= TamedWilds.GameResources.Creature.get_by_res_id(creature.res_id).name %></h4>
+          <progress class="progress progress-success w-56" value={creature.current_health} max={creature.max_health}></progress>
+          <p>Health: <%= creature.current_health %>/<%= creature.max_health %></p>
+        </div>
       </li>
     <% end %>
   </ul>

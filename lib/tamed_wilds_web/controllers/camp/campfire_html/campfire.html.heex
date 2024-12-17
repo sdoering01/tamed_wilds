@@ -15,7 +15,7 @@
     <% inventory_full? = Map.get(@item_quantity_map, recipe.result, 0) >= @inventory_size %>
     <% can_craft? = not inventory_full? and TamedWilds.QuantityMap.contains?(@item_quantity_map, recipe.ingredients) %>
 
-    <li class="card card-compact bg-base-200">
+    <li class="card card-compact bg-base-200 shadow-md">
       <div class="card-body">
         <h4 class="card-title">
           <%= TamedWilds.GameResources.Item.get_by_res_id(recipe.result).name%>
