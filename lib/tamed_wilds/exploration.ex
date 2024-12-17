@@ -26,6 +26,9 @@ defmodule TamedWilds.Exploration do
 
         maybe_trigger_creature_sighting(user)
 
+        experience_gain = 5
+        :ok = UserAttributes.add_experience(user, experience_gain)
+
         case Inventory.add_item(user, item, 1) do
           :ok -> {:ok, {:found_item, item}}
           {:error, :inventory_full} -> {:ok, {:found_item_but_inventory_full, item}}
@@ -83,9 +86,10 @@ defmodule TamedWilds.Exploration do
           creature_res = Res.Creature.get_by_res_id(creature_res_id)
           loot = creature_res.loot
 
-          case Inventory.add_items(user, loot) do
-            :ok -> {:ok, {:creature_killed, loot}}
-          end
+          :ok = Inventory.add_items(user, loot)
+          :ok = UserAttributes.add_experience(user, creature_res.kill_experience)
+
+          {:ok, {:creature_killed, loot}}
       end
     end)
   end
@@ -146,6 +150,10 @@ defmodule TamedWilds.Exploration do
                 if taming_process.feedings_left <= 1 do
                   {1, _} = Repo.delete_all(query)
                   {:ok, _} = Creatures.add_creature_to_user(user, taming_process.creature, now)
+
+                  experience_gain = Res.Creature.get_tame_experience(creature_res)
+                  :ok = UserAttributes.add_experience(user, experience_gain)
+
                   {:ok, :taming_complete}
                 else
                   next_feeding_at =

@@ -2,12 +2,10 @@ defmodule TamedWilds.UserAttributes do
   use Ecto.Schema
   import Ecto.Query
 
-  alias Inspect.TamedWilds.UserAttributes
-  alias Inspect.TamedWilds.UserAttributes
+  alias __MODULE__
   alias TamedWilds.Accounts.User
   alias TamedWilds.Repo
-  alias TamedWilds.Attributes.UserAttributes
-  alias __MODULE__
+  alias TamedWilds.GameResources, as: Res
 
   @primary_key false
   schema "user_attributes" do
@@ -18,6 +16,9 @@ defmodule TamedWilds.UserAttributes do
     field :max_health, :integer
 
     field :inventory_size, :integer
+
+    field :experience, :integer
+    field :level, :integer
 
     belongs_to :user, TamedWilds.Accounts.User
   end
@@ -52,6 +53,36 @@ defmodule TamedWilds.UserAttributes do
       {1, [%UserAttributes{current_health: 0}]} -> {:ok, :dead}
       {1, _} -> {:ok, :alive}
     end
+  end
+
+  @doc """
+  Adds experience to the player.
+
+  Should be called in a transaction.
+  """
+  def add_experience(%User{} = user, amount) do
+    query =
+      from u in UserAttributes,
+        where: u.user_id == ^user.id,
+        update: [inc: [experience: ^amount]],
+        select: u
+
+    {1, [%UserAttributes{level: previous_level, experience: new_experience}]} =
+      Repo.update_all(query, [])
+
+    new_level = Res.UserLevel.get_new_level(previous_level, new_experience)
+
+    if new_level > previous_level do
+      query =
+        from u in UserAttributes,
+          where: u.user_id == ^user.id,
+          update: [set: [level: ^new_level]],
+          select: u
+
+      {1, _} = Repo.update_all(query, [])
+    end
+
+    :ok
   end
 
   def regenerate_energy_of_all_users(by) do

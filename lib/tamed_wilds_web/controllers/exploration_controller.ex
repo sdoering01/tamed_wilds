@@ -4,7 +4,7 @@ defmodule TamedWildsWeb.ExplorationController do
   alias TamedWilds.{Exploration, UserAttributes, QuantityMap, Camp}
 
   def index(conn, _params) do
-    attributes = UserAttributes.get!(conn.assigns.current_user)
+    user_attributes = UserAttributes.get!(conn.assigns.current_user)
 
     exploration_creature = Exploration.get_exploration_creature(conn.assigns.current_user)
 
@@ -13,10 +13,7 @@ defmodule TamedWildsWeb.ExplorationController do
     stoneheart_built? = Camp.stoneheart_built?(conn.assigns.current_user)
 
     render(conn, :exploration,
-      current_energy: attributes.current_energy,
-      max_energy: attributes.max_energy,
-      current_health: attributes.current_health,
-      max_health: attributes.max_health,
+      user_attributes: user_attributes,
       exploration_creature: exploration_creature,
       taming_processes: taming_processes,
       stoneheart_built?: stoneheart_built?

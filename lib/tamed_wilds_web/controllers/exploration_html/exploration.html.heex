@@ -2,16 +2,29 @@
 
 <div class="mb-4">
   <div>
-    <progress class="progress progress-warning w-56" value={@current_energy} max={@max_energy}></progress>
-    <p>Energy: <%= @current_energy %> / <%= @max_energy %></p>
+    <% experience_for_current_level = TamedWilds.GameResources.UserLevel.get_experience_for_level(@user_attributes.level) %>
+    <% experience_for_next_level = TamedWilds.GameResources.UserLevel.get_experience_for_level(@user_attributes.level + 1) %>
+    <p>Level: <%= @user_attributes.level %></p>
+    <progress class="progress progress-primary w-56" value={@user_attributes.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
+  </div>
+  <div>
+    <progress class="progress progress-warning w-56" value={@user_attributes.current_energy} max={@user_attributes.max_energy}></progress>
+    <p>Energy: <%= @user_attributes.current_energy %> / <%= @user_attributes.max_energy %></p>
 
-    <progress class="progress progress-success w-56" value={@current_health} max={@max_health}></progress>
-    <p>Health: <%= @current_health %> / <%= @max_health %></p>
+    <progress class="progress progress-success w-56" value={@user_attributes.current_health} max={@user_attributes.max_health}></progress>
+    <p>Health: <%= @user_attributes.current_health %> / <%= @user_attributes.max_health %></p>
   </div>
 </div>
 
 <div class="flex items-center gap-1">
-  <.link href={~p"/exploration/explore"} method="post" class="btn btn-primary">Explore</.link>
+  <%= if @user_attributes.current_energy > 0 do %>
+    <.link href={~p"/exploration/explore"} method="post" class="btn btn-primary">Explore</.link>
+  <% else %>
+    <div class="tooltip" data-tip="No energy">
+      <button class="btn btn-primary" disabled>Explore</button>
+    </div>
+  <% end %>
+
   <.link href={~p"/exploration/regenerate"} method="post" class="btn btn-primary">DEV: Regenerate Energy of all Users</.link>
 </div>
 
@@ -34,7 +47,7 @@
           <.link href={~p"/exploration/tame"} method="post" class="btn btn-secondary">Tame</.link>
         <% else %>
           <div class="tooltip" data-tip="First construct Stonheart in Camp">
-            <.link href={~p"/exploration/tame"} method="post" class="btn btn-secondary" disabled>Tame</.link>
+            <button class="btn btn-secondary" disabled>Tame</button>
           </div>
         <% end %>
       </div>
