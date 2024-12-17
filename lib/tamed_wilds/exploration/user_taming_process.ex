@@ -27,7 +27,7 @@ defmodule TamedWilds.Exploration.UserTamingProcess do
     from utp in query, join: c in assoc(utp, :creature), as: :creature, preload: [creature: c]
   end
 
-  def where_next_feeding_at_before(%Ecto.Query{} = query, now) do
+  def where_next_feeding_before(%Ecto.Query{} = query, now) do
     from utp in query, where: utp.next_feeding_at < ^now
   end
 end

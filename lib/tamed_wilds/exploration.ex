@@ -139,7 +139,7 @@ defmodule TamedWilds.Exploration do
                 query =
                   UserTamingProcess.by_user_and_id(user, taming_process_id)
                   # Prevents feeding multiple times
-                  |> UserTamingProcess.where_next_feeding_at_before(now)
+                  |> UserTamingProcess.where_next_feeding_before(now)
 
                 creature_res = Res.Creature.get_by_res_id(taming_process.creature.res_id)
 
