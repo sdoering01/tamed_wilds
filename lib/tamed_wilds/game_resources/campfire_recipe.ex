@@ -1,8 +1,8 @@
 defmodule TamedWilds.GameResources.CampfireRecipe do
   alias __MODULE__
 
-  @enforce_keys [:res_id, :ingredients, :result]
-  defstruct [:res_id, :ingredients, :result]
+  @enforce_keys [:res_id, :ingredients, :result, :crafting_experience]
+  defstruct [:res_id, :ingredients, :result, :crafting_experience]
 
   def get_by_res_id(res_id) do
     get_all() |> Map.get(res_id) ||
@@ -17,7 +17,8 @@ defmodule TamedWilds.GameResources.CampfireRecipe do
           4 => 5,
           3 => 5
         },
-        result: 5
+        result: 5,
+        crafting_experience: 25
       }
     }
   end
