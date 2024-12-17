@@ -16,11 +16,23 @@
 <% else %>
   <ul class="flex flex-col gap-4">
     <%= for creature <- @creatures do %>
+      <% companion? = @companion_id == creature.id %>
+
       <li class="card card-compact bg-base-200 shadow-md">
         <div class="card-body">
-          <h4 class="card-title"><%= TamedWilds.GameResources.Creature.get_by_res_id(creature.res_id).name %></h4>
+          <h4 class="card-title">
+            <%= TamedWilds.GameResources.Creature.get_by_res_id(creature.res_id).name %>
+            <%= if companion? do %>
+              <span class="badge badge-primary">Companion</span>
+            <% end %>
+          </h4>
           <progress class="progress progress-success w-56" value={creature.current_health} max={creature.max_health}></progress>
           <p>Health: <%= creature.current_health %>/<%= creature.max_health %></p>
+          <%= if not companion? do %>
+            <.link href={~p"/camp/stoneheart/choose_companion?creature_id=#{creature.id}"} method="post" class="btn btn-primary btn-sm">Choose as Companion</.link>
+          <% else %>
+            <.link href={~p"/camp/stoneheart/leave_companion"} method="post" class="btn btn-secondary btn-sm">Leave in Camp</.link>
+          <% end %>
         </div>
       </li>
     <% end %>

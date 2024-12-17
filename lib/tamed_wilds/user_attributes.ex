@@ -5,9 +5,9 @@ defmodule TamedWilds.UserAttributes do
   alias __MODULE__
   alias TamedWilds.Accounts.User
   alias TamedWilds.Repo
+  alias TamedWilds.Creatures.Creature
   alias TamedWilds.GameResources, as: Res
 
-  @primary_key false
   schema "user_attributes" do
     field :current_energy, :integer
     field :max_energy, :integer
@@ -20,7 +20,9 @@ defmodule TamedWilds.UserAttributes do
     field :experience, :integer
     field :level, :integer
 
-    belongs_to :user, TamedWilds.Accounts.User
+    belongs_to :companion, TamedWilds.Creatures.Creature
+
+    belongs_to :user, User
   end
 
   def initial_setup(%User{} = user) do
@@ -28,7 +30,18 @@ defmodule TamedWilds.UserAttributes do
   end
 
   def get!(%User{} = user) do
-    Repo.get_by!(UserAttributes, user_id: user.id)
+    by_user(user) |> with_companion() |> Repo.one!()
+  end
+
+  def by_user(%User{} = user) do
+    from ua in UserAttributes, where: ua.user_id == ^user.id
+  end
+
+  def with_companion(%Ecto.Query{} = query) do
+    from ua in query,
+      left_join: c in assoc(ua, :companion),
+      as: :companion,
+      preload: [companion: c]
   end
 
   def reduce_energy(%User{} = user, amount) do
@@ -83,6 +96,28 @@ defmodule TamedWilds.UserAttributes do
     end
 
     :ok
+  end
+
+  def set_companion(%User{} = user, nil) do
+    {1, _} = Repo.update_all(by_user(user), set: [companion_id: nil])
+
+    :ok
+  end
+
+  def set_companion(%User{} = user, creature_id) do
+    case Repo.get(Creature, creature_id) do
+      nil ->
+        {:error, :creature_not_found}
+
+      creature ->
+        if creature.tamed_by != user.id do
+          {:error, :not_tamed_by_user}
+        else
+          {1, _} = Repo.update_all(by_user(user), set: [companion_id: creature_id])
+
+          :ok
+        end
+    end
   end
 
   def regenerate_energy_of_all_users(by) do

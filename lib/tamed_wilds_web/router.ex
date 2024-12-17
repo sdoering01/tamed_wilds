@@ -52,6 +52,8 @@ defmodule TamedWildsWeb.Router do
 
       scope "/stoneheart" do
         get "/", Camp.StoneheartController, :index
+        post "/choose_companion", Camp.StoneheartController, :choose_companion
+        post "/leave_companion", Camp.StoneheartController, :leave_companion
       end
 
       scope "/campfire" do

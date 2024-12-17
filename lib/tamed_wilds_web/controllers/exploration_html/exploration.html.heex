@@ -16,6 +16,20 @@
   </div>
 </div>
 
+<%= if @user_attributes.companion do %>
+  <% companion = @user_attributes.companion %>
+
+  <div class="mb-4">
+    <p>Companion: <%= TamedWilds.GameResources.Creature.get_by_res_id(companion.res_id).name %></p>
+    <progress class="progress progress-success w-56" value={companion.current_health} max={companion.max_health}></progress>
+    <p>Health: <%= companion.current_health %> / <%= companion.max_health %></p>
+  </div>
+<% else %>
+  <%= if @stoneheart_built? do %>
+    <p class="mb-4"><i>No companion chosen.</i> <.link href={~p"/camp/stoneheart"} class="inline-flex items-center text-primary">Go to Stoneheart <span class="hero-chevron-right-mini"></span></.link></p>
+  <% end %>
+<% end %>
+
 <div class="flex items-center gap-1">
   <%= if @user_attributes.current_energy > 0 do %>
     <.link href={~p"/exploration/explore"} method="post" class="btn btn-primary">Explore</.link>
