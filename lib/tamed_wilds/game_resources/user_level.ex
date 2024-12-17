@@ -21,7 +21,7 @@ defmodule TamedWilds.GameResources.UserLevel do
   @level_experiences CompileTime.calculate_level_experiences()
 
   def get_experience_for_level(level) do
-    elem(@level_experiences, level - 1) |> IO.inspect(label: "Experience for level #{level}")
+    elem(@level_experiences, level - 1)
   end
 
   def has_level_up?(current_level, new_experience) do
