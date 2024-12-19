@@ -40,7 +40,12 @@ defmodule TamedWilds.Exploration do
   def attack_creature(%User{} = user) do
     damage_by_user = 2
 
-    query = ExplorationCreature.do_damage_query(user, damage_by_user)
+    companion = UserAttributes.get_companion(user)
+
+    damage_by_companion =
+      if is_nil(companion), do: 0, else: Res.Creature.get_by_res_id(companion.res_id).damage
+
+    query = ExplorationCreature.do_damage_query(user, damage_by_user + damage_by_companion)
 
     Repo.transact(fn ->
       case Repo.update_all(query, []) do
@@ -55,10 +60,18 @@ defmodule TamedWilds.Exploration do
             {:ok, :creature_defeated}
           else
             creature_res = Res.Creature.get_by_res_id(creature_res_id)
+            damage_by_creature = creature_res.damage
 
-            case UserAttributes.do_damage(user, creature_res.damage) do
+            if not is_nil(companion) do
+              {:ok, _} =
+                UserAttributes.do_damage_to_companion(user, companion, damage_by_creature)
+            end
+
+            case UserAttributes.do_damage(user, damage_by_creature) do
               {:ok, :dead} ->
-                {1, _} = ExplorationCreature.by_user(user) |> Repo.delete_all()
+                # Also deletes exploration creature via cascade
+                {1, _} = Repo.delete_all(ExplorationCreature.associated_creature_query(user))
+
                 {:ok, :user_died}
 
               {:ok, :alive} ->

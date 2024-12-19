@@ -33,6 +33,10 @@ defmodule TamedWildsWeb.Router do
       post "/kill", ExplorationController, :kill
       post "/tame", ExplorationController, :tame
 
+      scope "/companion" do
+        post "/send_to_camp", ExplorationController, :send_companion_to_camp
+      end
+
       scope "/taming" do
         post "/feed", ExplorationController, :taming_feed
         post "/cancel", ExplorationController, :taming_cancel

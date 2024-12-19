@@ -23,6 +23,7 @@
     <p>Companion: <%= TamedWilds.GameResources.Creature.get_by_res_id(companion.res_id).name %></p>
     <progress class="progress progress-success w-56" value={companion.current_health} max={companion.max_health}></progress>
     <p>Health: <%= companion.current_health %> / <%= companion.max_health %></p>
+    <.link href={~p"/exploration/companion/send_to_camp"} method="post" class="btn btn-secondary btn-sm">Send back to Camp</.link>
   </div>
 <% else %>
   <%= if @stoneheart_built? do %>

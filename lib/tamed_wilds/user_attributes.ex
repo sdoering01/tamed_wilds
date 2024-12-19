@@ -98,7 +98,18 @@ defmodule TamedWilds.UserAttributes do
     :ok
   end
 
-  def set_companion(%User{} = user, nil) do
+  def get_companion(%User{} = user) do
+    query =
+      from ua in by_user(user),
+        left_join: c in assoc(ua, :companion),
+        select: c
+
+    Repo.one(query)
+  end
+
+  def min_hp_percentage_for_set_companion, do: 20
+
+  def clear_companion(%User{} = user) do
     {1, _} = Repo.update_all(by_user(user), set: [companion_id: nil])
 
     :ok
@@ -110,13 +121,33 @@ defmodule TamedWilds.UserAttributes do
         {:error, :creature_not_found}
 
       creature ->
-        if creature.tamed_by != user.id do
-          {:error, :not_tamed_by_user}
-        else
-          {1, _} = Repo.update_all(by_user(user), set: [companion_id: creature_id])
+        cond do
+          creature.tamed_by != user.id ->
+            {:error, :not_tamed_by_user}
 
-          :ok
+          creature.current_health <
+              creature.max_health * min_hp_percentage_for_set_companion() / 100 ->
+            {:error, :companion_too_low_health}
+
+          true ->
+            {1, _} = Repo.update_all(by_user(user), set: [companion_id: creature_id])
+
+            :ok
         end
+    end
+  end
+
+  def do_damage_to_companion(%User{} = user, %Creature{} = companion, damage) do
+    {1, [%Creature{current_health: new_companion_health}]} =
+      Creature.by_id(companion.id)
+      |> Creature.with_do_damage(damage)
+      |> Repo.update_all([])
+
+    if new_companion_health <= 0 do
+      :ok = UserAttributes.clear_companion(user)
+      {:ok, :defeated}
+    else
+      {:ok, :alive}
     end
   end
 

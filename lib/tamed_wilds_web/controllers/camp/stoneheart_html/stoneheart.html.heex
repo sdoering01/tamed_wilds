@@ -29,7 +29,13 @@
           <progress class="progress progress-success w-56" value={creature.current_health} max={creature.max_health}></progress>
           <p>Health: <%= creature.current_health %>/<%= creature.max_health %></p>
           <%= if not companion? do %>
-            <.link href={~p"/camp/stoneheart/choose_companion?creature_id=#{creature.id}"} method="post" class="btn btn-primary btn-sm">Choose as Companion</.link>
+            <%= if creature.current_health >= @min_hp_percentage_for_set_companion / 100 * creature.max_health do %>
+              <.link href={~p"/camp/stoneheart/choose_companion?creature_id=#{creature.id}"} method="post" class="btn btn-primary btn-sm">Choose as Companion</.link>
+            <% else %>
+              <div class="tooltip" data-tip={"Needs at least #{@min_hp_percentage_for_set_companion}% health to choose as companion"}>
+                <button class="btn btn-primary btn-sm w-full" disabled>Choose as Companion</button>
+              </div>
+            <% end %>
           <% else %>
             <.link href={~p"/camp/stoneheart/leave_companion"} method="post" class="btn btn-secondary btn-sm">Leave in Camp</.link>
           <% end %>

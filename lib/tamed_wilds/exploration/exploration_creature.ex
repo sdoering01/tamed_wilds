@@ -31,18 +31,12 @@ defmodule TamedWilds.Exploration.ExplorationCreature do
   end
 
   def associated_creature_query(%User{} = user) do
-    from c in TamedWilds.Creatures.Creature,
+    from c in Creature,
       join: ec in subquery(by_user(user)),
       where: c.id == ec.creature_id
   end
 
   def do_damage_query(%User{} = user, damage) do
-    from c in associated_creature_query(user),
-      update: [
-        set: [
-          current_health: fragment("greatest(?, ?)", c.current_health - ^damage, 0)
-        ]
-      ],
-      select: c
+    user |> associated_creature_query() |> Creature.with_do_damage(damage)
   end
 end

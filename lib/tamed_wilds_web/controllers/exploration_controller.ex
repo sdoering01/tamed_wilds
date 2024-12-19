@@ -40,6 +40,12 @@ defmodule TamedWildsWeb.ExplorationController do
     redirect(conn, to: ~p"/exploration")
   end
 
+  def send_companion_to_camp(conn, _params) do
+    :ok = UserAttributes.clear_companion(conn.assigns.current_user)
+
+    conn |> put_flash(:info, "Sent companion back to camp!") |> redirect(to: ~p"/exploration")
+  end
+
   def attack(conn, _params) do
     # TODO: Maybe include the name of the creature in the flash message
 

@@ -15,7 +15,8 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
     render(conn, :stoneheart,
       level: level,
       creatures: creatures,
-      companion_id: user_attributes.companion_id
+      companion_id: user_attributes.companion_id,
+      min_hp_percentage_for_set_companion: UserAttributes.min_hp_percentage_for_set_companion()
     )
   end
 
@@ -28,6 +29,13 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
         {:error, :not_tamed_by_user} ->
           put_flash(conn, :error, "You haven't tamed this creature!")
 
+        {:error, :companion_too_low_health} ->
+          put_flash(
+            conn,
+            :error,
+            "You cannot choose a creature with less than #{UserAttributes.min_hp_percentage_for_set_companion()}% health as your companion!"
+          )
+
         :ok ->
           put_flash(conn, :info, "Companion chosen!")
       end
@@ -36,7 +44,7 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
   end
 
   def leave_companion(conn, _params) do
-    :ok = UserAttributes.set_companion(conn.assigns.current_user, nil)
+    :ok = UserAttributes.clear_companion(conn.assigns.current_user)
 
     conn |> put_flash(:info, "Companion will stay in Camp!") |> redirect(to: ~p"/camp/stoneheart")
   end
