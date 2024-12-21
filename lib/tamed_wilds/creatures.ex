@@ -2,14 +2,14 @@ defmodule TamedWilds.Creatures do
   import Ecto.Query
 
   alias TamedWilds.Accounts.User
-  alias TamedWilds.Creatures.Creature
+  alias TamedWilds.Creatures.{Creature, CreatureLevel}
   alias TamedWilds.Repo
 
   def get_user_creatures(%User{} = user) do
     Creature.tamed_by_user(user) |> Repo.all()
   end
 
-  def add_creature_to_user(%User{} = user, %Creature{} = creature, tamed_at \\ nil) do
+  def tame_creature(%User{} = user, %Creature{} = creature, tamed_at \\ nil) do
     tamed_at = if is_nil(tamed_at), do: DateTime.utc_now(), else: tamed_at
 
     creature |> Creature.tame_changeset(user, tamed_at) |> Repo.update()
@@ -33,5 +33,29 @@ defmodule TamedWilds.Creatures do
         ]
 
     Repo.update_all(query, [])
+  end
+
+  def add_experience(%Creature{} = creature, experience) do
+    query =
+      from c in Creature,
+        where: c.id == ^creature.id,
+        update: [inc: [experience: ^experience]],
+        select: c
+
+    {1, [%Creature{experience: new_experience}]} = Repo.update_all(query, [])
+
+    new_level = CreatureLevel.get_new_level(creature, new_experience)
+
+    if new_level > creature.level do
+      query =
+        from c in Creature,
+          where: c.id == ^creature.id,
+          update: [set: [level: ^new_level]],
+          select: c
+
+      {1, _} = Repo.update_all(query, [])
+    end
+
+    :ok
   end
 end

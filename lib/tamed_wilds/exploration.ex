@@ -29,6 +29,12 @@ defmodule TamedWilds.Exploration do
         experience_gain = 5
         :ok = UserAttributes.add_experience(user, experience_gain)
 
+        companion = UserAttributes.get_companion(user)
+
+        if not is_nil(companion) do
+          :ok = Creatures.add_experience(companion, experience_gain)
+        end
+
         case Inventory.add_item(user, item, 1) do
           :ok -> {:ok, {:found_item, item}}
           {:error, :inventory_full} -> {:ok, {:found_item_but_inventory_full, item}}
@@ -102,6 +108,12 @@ defmodule TamedWilds.Exploration do
           :ok = Inventory.add_items(user, loot)
           :ok = UserAttributes.add_experience(user, creature_res.kill_experience)
 
+          companion = UserAttributes.get_companion(user)
+
+          if not is_nil(companion) do
+            :ok = Creatures.add_experience(companion, creature_res.kill_experience)
+          end
+
           {:ok, {:creature_killed, loot}}
       end
     end)
@@ -162,7 +174,7 @@ defmodule TamedWilds.Exploration do
 
                 if taming_process.feedings_left <= 1 do
                   {1, _} = Repo.delete_all(query)
-                  {:ok, _} = Creatures.add_creature_to_user(user, taming_process.creature, now)
+                  {:ok, _} = Creatures.tame_creature(user, taming_process.creature, now)
 
                   experience_gain = Res.Creature.get_tame_experience(creature_res)
                   :ok = UserAttributes.add_experience(user, experience_gain)
@@ -214,10 +226,14 @@ defmodule TamedWilds.Exploration do
 
       creature_res = @creature_table |> Enum.random()
 
+      # TODO: Get this from the GameResource of the exploration area
+      creature_level = Enum.random(1..5)
+
       creature = %Creature{
         res_id: creature_res.res_id,
         current_health: creature_res.max_health,
-        max_health: creature_res.max_health
+        max_health: creature_res.max_health,
+        level: creature_level
       }
 
       %ExplorationCreature{

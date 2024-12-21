@@ -22,6 +22,7 @@
         <div class="card-body">
           <h4 class="card-title">
             <%= TamedWilds.GameResources.Creature.get_by_res_id(creature.res_id).name %>
+            (Level <%= creature.level %>)
             <%= if companion? do %>
               <span class="badge badge-primary">Companion</span>
             <% end %>

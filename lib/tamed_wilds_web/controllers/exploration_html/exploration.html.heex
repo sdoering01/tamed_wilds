@@ -18,9 +18,12 @@
 
 <%= if @user_attributes.companion do %>
   <% companion = @user_attributes.companion %>
+  <% experience_for_current_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level) %>
+  <% experience_for_next_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level + 1) %>
 
   <div class="mb-4">
-    <p>Companion: <%= TamedWilds.GameResources.Creature.get_by_res_id(companion.res_id).name %></p>
+    <p>Companion: <%= TamedWilds.GameResources.Creature.get_by_res_id(companion.res_id).name %> (Level <%= companion.level %>)</p>
+    <progress class="progress progress-primary w-56" value={companion.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress> <br />
     <progress class="progress progress-success w-56" value={companion.current_health} max={companion.max_health}></progress>
     <p>Health: <%= companion.current_health %> / <%= companion.max_health %></p>
     <.link href={~p"/exploration/companion/send_to_camp"} method="post" class="btn btn-secondary btn-sm">Send back to Camp</.link>
@@ -47,7 +50,7 @@
   <% creature = @exploration_creature.creature %>
   <% creature_res = TamedWilds.GameResources.Creature.get_by_res_id(creature.res_id) %>
   <div class="mt-4">
-    <h3 class="text-lg"><%= creature_res.name %></h3>
+    <h3 class="text-lg"><%= creature_res.name %> (Level <%= creature.level %>)</h3>
 
     <%= if creature.current_health > 0 do %>
       <progress class="progress progress-error w-56" value={creature.current_health} max={creature.max_health}></progress>
@@ -79,7 +82,7 @@
       <% seconds_left = DateTime.diff(taming_process.next_feeding_at, DateTime.utc_now()) %>
 
       <li>
-        <p><%= creature_res.name %></p>
+        <p><%= creature_res.name %> (Level <%= taming_process.creature.level %>)</p>
         <progress class="progress progress-primary w-56" value={creature_res.taming.feedings - taming_process.feedings_left} max={creature_res.taming.feedings}></progress>
         <p><%= taming_process.feedings_left %> <%= if taming_process.feedings_left == 1, do: "feeding", else: "feedings" %> left</p>
         <%= if seconds_left > 0 do %>

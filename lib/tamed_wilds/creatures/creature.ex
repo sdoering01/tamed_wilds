@@ -11,6 +11,10 @@ defmodule TamedWilds.Creatures.Creature do
     field :current_health, :integer
     field :max_health, :integer
 
+    field :experience, :integer
+    field :level, :integer
+    field :level_after_tamed, :integer
+
     field :tamed_at, :utc_datetime_usec
 
     belongs_to :user, User, foreign_key: :tamed_by
@@ -29,7 +33,7 @@ defmodule TamedWilds.Creatures.Creature do
   end
 
   def tame_changeset(%Creature{} = creature, %User{} = user, tamed_at) do
-    creature |> change(tamed_by: user.id, tamed_at: tamed_at)
+    creature |> change(tamed_by: user.id, tamed_at: tamed_at, level_after_tamed: creature.level)
   end
 
   def with_do_damage(%Ecto.Query{} = query, damage) do
