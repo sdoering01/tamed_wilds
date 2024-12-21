@@ -83,7 +83,7 @@
         <progress class="progress progress-primary w-56" value={creature_res.taming.feedings - taming_process.feedings_left} max={creature_res.taming.feedings}></progress>
         <p><%= taming_process.feedings_left %> <%= if taming_process.feedings_left == 1, do: "feeding", else: "feedings" %> left</p>
         <%= if seconds_left > 0 do %>
-          <.link disabled class="btn btn-primary">Feed Berry (in <%= seconds_left %>s)</.link>
+          <button disabled class="btn btn-primary">Feed Berry (in <%= seconds_left %>s)</button>
         <% else %>
           <.link href={~p"/exploration/taming/feed?id=#{taming_process.id}"} method="post" class="btn btn-primary">Feed Berry</.link>
         <% end %>
