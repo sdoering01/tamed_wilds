@@ -33,7 +33,7 @@ defmodule TamedWilds.Exploration.ExplorationCreature do
   def associated_creature_query(%User{} = user) do
     from c in Creature,
       join: ec in subquery(by_user(user)),
-      where: c.id == ec.creature_id
+      on: c.id == ec.creature_id
   end
 
   def do_damage_query(%User{} = user, damage) do
