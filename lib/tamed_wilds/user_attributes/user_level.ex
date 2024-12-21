@@ -1,4 +1,4 @@
-defmodule TamedWilds.GameResources.UserLevel do
+defmodule TamedWilds.UserAttributes.UserLevel do
   defmodule CompileTime do
     @max_level 30
 

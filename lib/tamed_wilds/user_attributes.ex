@@ -6,7 +6,7 @@ defmodule TamedWilds.UserAttributes do
   alias TamedWilds.Accounts.User
   alias TamedWilds.Repo
   alias TamedWilds.Creatures.Creature
-  alias TamedWilds.GameResources, as: Res
+  alias TamedWilds.UserAttributes.UserLevel
 
   schema "user_attributes" do
     field :current_energy, :integer
@@ -83,7 +83,7 @@ defmodule TamedWilds.UserAttributes do
     {1, [%UserAttributes{level: previous_level, experience: new_experience}]} =
       Repo.update_all(query, [])
 
-    new_level = Res.UserLevel.get_new_level(previous_level, new_experience)
+    new_level = UserLevel.get_new_level(previous_level, new_experience)
 
     if new_level > previous_level do
       query =
