@@ -12,7 +12,8 @@ defmodule TamedWilds.Creatures.CreatureLevel do
         next_experience = experience + (level_ups + 1) * 100
         {next_level_ups, next_experience}
       end)
-      |> Enum.take(@max_level_ups_after_tamed)
+      # `+ 1` because "level up 0" is already included
+      |> Enum.take(@max_level_ups_after_tamed + 1)
       |> Enum.map(&elem(&1, 1))
       |> List.to_tuple()
     end
