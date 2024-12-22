@@ -11,6 +11,8 @@ defmodule TamedWilds.Exploration do
 
   @creature_table Res.Creature.get_all() |> Map.values()
 
+  @experience_increase_factor_per_creature_level 0.1
+
   def get_exploration_creature(%User{} = user) do
     ExplorationCreature.by_user(user) |> ExplorationCreature.with_creature() |> Repo.one()
   end
@@ -122,19 +124,22 @@ defmodule TamedWilds.Exploration do
         {1, [%ExplorationCreature{creature_id: creature_id}]} ->
           # Safety: We can delete by ID since we already made sure that the
           # exploration creature exists, is defeated and belongs to the user
-          {1, [%Creature{res_id: creature_res_id}]} =
+          {1, [%Creature{} = creature]} =
             Creature.delete_by_id_query(creature_id) |> Repo.delete_all()
 
-          creature_res = Res.Creature.get_by_res_id(creature_res_id)
+          creature_res = Res.Creature.get_by_res_id(creature.res_id)
           loot = creature_res.loot
 
+          kill_experience =
+            round(creature_res.base_kill_experience * experience_factor(creature.level))
+
           :ok = Inventory.add_items(user, loot)
-          :ok = UserAttributes.add_experience(user, creature_res.kill_experience)
+          :ok = UserAttributes.add_experience(user, kill_experience)
 
           companion = UserAttributes.get_companion(user)
 
           if not is_nil(companion) do
-            :ok = Creatures.add_experience(companion, creature_res.kill_experience)
+            :ok = Creatures.add_experience(companion, kill_experience)
           end
 
           {:ok, {:creature_killed, loot}}
@@ -199,7 +204,12 @@ defmodule TamedWilds.Exploration do
                   {1, _} = Repo.delete_all(query)
                   {:ok, _} = Creatures.tame_creature(user, taming_process.creature, now)
 
-                  experience_gain = Res.Creature.get_tame_experience(creature_res)
+                  experience_gain =
+                    round(
+                      Res.Creature.get_base_tame_experience(creature_res) *
+                        experience_factor(taming_process.creature.level)
+                    )
+
                   :ok = UserAttributes.add_experience(user, experience_gain)
 
                   {:ok, :taming_complete}
@@ -299,5 +309,9 @@ defmodule TamedWilds.Exploration do
         4 -> {hp, ep, dp, rp + 1}
       end
     end)
+  end
+
+  defp experience_factor(level) do
+    1 + @experience_increase_factor_per_creature_level * (level - 1)
   end
 end
