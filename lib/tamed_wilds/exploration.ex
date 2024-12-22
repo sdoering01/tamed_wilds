@@ -11,7 +11,7 @@ defmodule TamedWilds.Exploration do
 
   @creature_table Res.Creature.get_all() |> Map.values()
 
-  @experience_increase_factor_per_creature_level 0.1
+  @experience_factor_increase_per_creature_level 0.1
 
   def get_exploration_creature(%User{} = user) do
     ExplorationCreature.by_user(user) |> ExplorationCreature.with_creature() |> Repo.one()
@@ -310,6 +310,6 @@ defmodule TamedWilds.Exploration do
   end
 
   defp experience_factor(level) do
-    1 + @experience_increase_factor_per_creature_level * (level - 1)
+    1 + @experience_factor_increase_per_creature_level * (level - 1)
   end
 end
