@@ -6,6 +6,8 @@ defmodule TamedWilds.Creatures.Creature do
   alias __MODULE__
   alias TamedWilds.Accounts.User
 
+  @damage_percentage_increase_per_damage_point 5
+
   schema "creatures" do
     field :res_id, :integer
     field :current_health, :integer
@@ -14,6 +16,16 @@ defmodule TamedWilds.Creatures.Creature do
     field :experience, :integer
     field :level, :integer
     field :level_after_tamed, :integer
+
+    field :health_points, :integer
+    field :energy_points, :integer
+    field :damage_points, :integer
+    field :resistance_points, :integer
+
+    field :health_points_after_tamed, :integer
+    field :energy_points_after_tamed, :integer
+    field :damage_points_after_tamed, :integer
+    field :resistance_points_after_tamed, :integer
 
     field :tamed_at, :utc_datetime_usec
 
@@ -33,7 +45,16 @@ defmodule TamedWilds.Creatures.Creature do
   end
 
   def tame_changeset(%Creature{} = creature, %User{} = user, tamed_at) do
-    creature |> change(tamed_by: user.id, tamed_at: tamed_at, level_after_tamed: creature.level)
+    creature
+    |> change(
+      tamed_by: user.id,
+      tamed_at: tamed_at,
+      level_after_tamed: creature.level,
+      health_points_after_tamed: creature.health_points,
+      energy_points_after_tamed: creature.energy_points,
+      damage_points_after_tamed: creature.damage_points,
+      resistance_points_after_tamed: creature.resistance_points
+    )
   end
 
   def with_do_damage(%Ecto.Query{} = query, damage) do
@@ -44,5 +65,17 @@ defmodule TamedWilds.Creatures.Creature do
         ]
       ],
       select: c
+  end
+
+  def outgoing_damage_percentage(%Creature{} = creature) do
+    100 + creature.damage_points * @damage_percentage_increase_per_damage_point
+  end
+
+  def incoming_damage_percentage(%Creature{} = creature) do
+    if creature.resistance_points == 0 do
+      100
+    else
+      :math.pow(0.98, :math.log(creature.resistance_points) / :math.log(1.5)) * 100
+    end
   end
 end

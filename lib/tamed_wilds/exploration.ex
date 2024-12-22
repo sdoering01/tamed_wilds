@@ -49,12 +49,24 @@ defmodule TamedWilds.Exploration do
 
     companion = user_attributes.companion
 
-    damage_by_user = 2 * UserAttributes.outgoing_damage_percentage(user_attributes) / 100
+    creature = get_exploration_creature(user).creature
+
+    base_damage_by_user = 2
+
+    damage_by_user =
+      base_damage_by_user * UserAttributes.outgoing_damage_percentage(user_attributes) / 100
 
     damage_by_companion =
-      if is_nil(companion), do: 0, else: Res.Creature.get_by_res_id(companion.res_id).damage
+      if is_nil(companion),
+        do: 0,
+        else:
+          Res.Creature.get_by_res_id(companion.res_id).damage *
+            Creature.outgoing_damage_percentage(companion) / 100
 
-    query = ExplorationCreature.do_damage_query(user, round(damage_by_user + damage_by_companion))
+    damage_to_creature =
+      (damage_by_user + damage_by_companion) * Creature.incoming_damage_percentage(creature) / 100
+
+    query = ExplorationCreature.do_damage_query(user, round(damage_to_creature))
 
     Repo.transact(fn ->
       case Repo.update_all(query, []) do
@@ -69,15 +81,20 @@ defmodule TamedWilds.Exploration do
             {:ok, :creature_defeated}
           else
             creature_res = Res.Creature.get_by_res_id(creature_res_id)
-            damage_by_creature = creature_res.damage
+
+            damage_by_creature =
+              creature_res.damage * Creature.outgoing_damage_percentage(creature) / 100
 
             damage_to_user =
               damage_by_creature * UserAttributes.incoming_damage_percentage(user_attributes) /
                 100
 
             if not is_nil(companion) do
+              damage_to_companion =
+                damage_by_creature * Creature.incoming_damage_percentage(creature) / 100
+
               {:ok, _} =
-                UserAttributes.do_damage_to_companion(user, companion, damage_by_creature)
+                UserAttributes.do_damage_to_companion(user, companion, round(damage_to_companion))
             end
 
             case UserAttributes.do_damage(user, round(damage_to_user)) do
@@ -236,12 +253,7 @@ defmodule TamedWilds.Exploration do
       # TODO: Get this from the GameResource of the exploration area
       creature_level = Enum.random(1..5)
 
-      creature = %Creature{
-        res_id: creature_res.res_id,
-        current_health: creature_res.max_health,
-        max_health: creature_res.max_health,
-        level: creature_level
-      }
+      creature = random_creature(creature_res, creature_level)
 
       %ExplorationCreature{
         user_id: user.id,
@@ -249,5 +261,44 @@ defmodule TamedWilds.Exploration do
       }
       |> Repo.insert(on_conflict: :replace_all, conflict_target: [:user_id])
     end
+  end
+
+  defp random_creature(%Res.Creature{} = creature_res, level) do
+    {health_points, energy_points, damage_points, resistance_points} = randomize_attributes(level)
+
+    # Set health points to max health
+    health_percentage_increase_per_health_point = 5
+
+    max_health =
+      round(
+        creature_res.max_health *
+          (1 + health_points * health_percentage_increase_per_health_point / 100)
+      )
+
+    creature = %Creature{
+      res_id: creature_res.res_id,
+      current_health: max_health,
+      max_health: max_health,
+      level: level,
+      health_points: health_points,
+      energy_points: energy_points,
+      damage_points: damage_points,
+      resistance_points: resistance_points
+    }
+
+    creature
+  end
+
+  defp randomize_attributes(level) do
+    Stream.repeatedly(fn -> Enum.random(1..4) end)
+    |> Stream.take(level - 1)
+    |> Enum.reduce({0, 0, 0, 0}, fn random_num, {hp, ep, dp, rp} ->
+      case random_num do
+        1 -> {hp + 1, ep, dp, rp}
+        2 -> {hp, ep + 1, dp, rp}
+        3 -> {hp, ep, dp + 1, rp}
+        4 -> {hp, ep, dp, rp + 1}
+      end
+    end)
   end
 end
