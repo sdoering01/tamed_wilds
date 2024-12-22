@@ -46,6 +46,15 @@ defmodule TamedWildsWeb.Router do
       post "/regenerate", ExplorationController, :regenerate
     end
 
+    scope "/character" do
+      get "/", CharacterController, :index
+
+      scope "/attributes" do
+        post "/spend_point", CharacterController, :spend_attribute_point
+        post "/reset_points", CharacterController, :reset_attribute_points
+      end
+    end
+
     scope "/inventory" do
       get "/", InventoryController, :index
     end

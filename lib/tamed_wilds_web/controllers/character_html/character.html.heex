@@ -1,0 +1,45 @@
+<h2 class="page-title mb-2">Character</h2>
+
+<% unspent_points = UserAttributes.unspent_points(@user_attributes) %>
+
+<div class="mb-4">
+  <% experience_for_current_level = UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level) %>
+  <% experience_for_next_level = UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level + 1) %>
+  <p>Level: <%= @user_attributes.level %></p>
+  <progress class="progress progress-primary w-56" value={@user_attributes.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
+  <p>Experience: <%= @user_attributes.experience %> / <%= experience_for_next_level %></p>
+</div>
+
+<div class="flex flex-col items-start gap-2">
+  <p class="mb-2">Unspent points: <%= unspent_points %></p>
+
+  <p>
+    Health: <%= @user_attributes.current_health %> / <%= @user_attributes.max_health %>
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/character/attributes/spend_point?attribute=health"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <p class="flex items-center gap-2">
+    Energy: <%= @user_attributes.current_energy %> / <%= @user_attributes.max_energy %>
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/character/attributes/spend_point?attribute=energy"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <p>
+    Damage: <%= UserAttributes.outgoing_damage_percentage(@user_attributes) %>%
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/character/attributes/spend_point?attribute=damage"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <p>
+    Resistance: <%= @user_attributes.resistance_points %>
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/character/attributes/spend_point?attribute=resistance"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <.link href={~p"/character/attributes/reset_points"} method="post" class="btn btn-error btn-sm mt-2" data-confirm="Do you really want to reset all attribute points?">Reset points</.link>
+</div>

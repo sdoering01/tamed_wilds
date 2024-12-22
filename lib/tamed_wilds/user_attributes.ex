@@ -8,6 +8,14 @@ defmodule TamedWilds.UserAttributes do
   alias TamedWilds.Creatures.Creature
   alias TamedWilds.UserAttributes.UserLevel
 
+  @attributes [:health, :energy, :damage, :resistance]
+  @max_health_increase_per_health_point 10
+  @max_energy_increase_per_energy_point 10
+  @damage_percentage_increase_per_damage_point 5
+
+  @base_max_health 100
+  @base_max_energy 100
+
   schema "user_attributes" do
     field :current_energy, :integer
     field :max_energy, :integer
@@ -20,6 +28,11 @@ defmodule TamedWilds.UserAttributes do
     field :experience, :integer
     field :level, :integer
 
+    field :health_points, :integer
+    field :energy_points, :integer
+    field :damage_points, :integer
+    field :resistance_points, :integer
+
     belongs_to :companion, TamedWilds.Creatures.Creature
 
     belongs_to :user, User
@@ -31,6 +44,10 @@ defmodule TamedWilds.UserAttributes do
 
   def get!(%User{} = user) do
     by_user(user) |> with_companion() |> Repo.one!()
+  end
+
+  def by_id(id) do
+    from ua in UserAttributes, where: ua.id == ^id
   end
 
   def by_user(%User{} = user) do
@@ -151,23 +168,108 @@ defmodule TamedWilds.UserAttributes do
     end
   end
 
-  def regenerate_energy_of_all_users(by) do
+  def unspent_points(%UserAttributes{} = user_attributes) do
+    total_points = user_attributes.level - 1
+
+    unspent_points =
+      total_points -
+        user_attributes.health_points -
+        user_attributes.energy_points -
+        user_attributes.damage_points -
+        user_attributes.resistance_points
+
+    unspent_points
+  end
+
+  def filter_has_unspent_points(%Ecto.Query{} = query) do
+    from ua in query,
+      where:
+        ua.level - ^1 - ua.health_points - ua.energy_points - ua.damage_points -
+          ua.resistance_points > 0
+  end
+
+  def spend_attribute_point(%User{} = user, attribute)
+      when attribute in @attributes do
+    query = by_user(user) |> filter_has_unspent_points()
+
+    case Repo.update_all(query, spend_attribute_point_update(attribute)) do
+      {0, _} -> {:error, :not_enough_points}
+      _ -> :ok
+    end
+  end
+
+  defp spend_attribute_point_update(attribute) when attribute in @attributes do
+    case attribute do
+      :health -> [inc: [health_points: 1, max_health: @max_health_increase_per_health_point]]
+      :energy -> [inc: [energy_points: 1, max_energy: @max_energy_increase_per_energy_point]]
+      :damage -> [inc: [damage_points: 1]]
+      :resistance -> [inc: [resistance_points: 1]]
+    end
+  end
+
+  def reset_attribute_points(%User{} = user) do
+    query =
+      from ua in by_user(user),
+        update: [
+          set: [
+            health_points: 0,
+            energy_points: 0,
+            damage_points: 0,
+            resistance_points: 0,
+            max_health: @base_max_health,
+            max_energy: @base_max_energy,
+            current_health: fragment("least(?, ?)", ua.current_health, @base_max_health),
+            current_energy: fragment("least(?, ?)", ua.current_energy, @base_max_energy)
+          ]
+        ]
+
+    {1, _} = Repo.update_all(query, [])
+    :ok
+  end
+
+  def outgoing_damage_percentage(%UserAttributes{} = user_attributes) do
+    100 + user_attributes.damage_points * @damage_percentage_increase_per_damage_point
+  end
+
+  def incoming_damage_percentage(%UserAttributes{} = user_attributes) do
+    if user_attributes.resistance_points == 0 do
+      100
+    else
+      :math.pow(0.98, :math.log(user_attributes.resistance_points) / :math.log(1.5)) * 100
+    end
+  end
+
+  def regenerate_energy_of_all_users(by_percentage) do
     query =
       from u in UserAttributes,
         where: u.current_energy < u.max_energy,
         update: [
-          set: [current_energy: fragment("least(?, ?)", u.current_energy + ^by, u.max_energy)]
+          set: [
+            current_energy:
+              fragment(
+                "least(?, ?)",
+                u.current_energy + u.max_energy * ^by_percentage / 100.0,
+                u.max_energy
+              )
+          ]
         ]
 
     Repo.update_all(query, [])
   end
 
-  def regenerate_health_of_all_users(by) do
+  def regenerate_health_of_all_users(by_percentage) do
     query =
       from u in UserAttributes,
         where: u.current_health < u.max_health,
         update: [
-          set: [current_health: fragment("least(?, ?)", u.current_health + ^by, u.max_health)]
+          set: [
+            current_health:
+              fragment(
+                "least(?, ?)",
+                u.current_health + u.max_health * ^by_percentage / 100.0,
+                u.max_health
+              )
+          ]
         ]
 
     Repo.update_all(query, [])

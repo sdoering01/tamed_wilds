@@ -44,14 +44,17 @@ defmodule TamedWilds.Exploration do
   end
 
   def attack_creature(%User{} = user) do
-    damage_by_user = 2
+    user_attributes =
+      UserAttributes.by_user(user) |> UserAttributes.with_companion() |> Repo.one!()
 
-    companion = UserAttributes.get_companion(user)
+    companion = user_attributes.companion
+
+    damage_by_user = 2 * UserAttributes.outgoing_damage_percentage(user_attributes) / 100
 
     damage_by_companion =
       if is_nil(companion), do: 0, else: Res.Creature.get_by_res_id(companion.res_id).damage
 
-    query = ExplorationCreature.do_damage_query(user, damage_by_user + damage_by_companion)
+    query = ExplorationCreature.do_damage_query(user, round(damage_by_user + damage_by_companion))
 
     Repo.transact(fn ->
       case Repo.update_all(query, []) do
@@ -68,12 +71,16 @@ defmodule TamedWilds.Exploration do
             creature_res = Res.Creature.get_by_res_id(creature_res_id)
             damage_by_creature = creature_res.damage
 
+            damage_to_user =
+              damage_by_creature * UserAttributes.incoming_damage_percentage(user_attributes) /
+                100
+
             if not is_nil(companion) do
               {:ok, _} =
                 UserAttributes.do_damage_to_companion(user, companion, damage_by_creature)
             end
 
-            case UserAttributes.do_damage(user, damage_by_creature) do
+            case UserAttributes.do_damage(user, round(damage_to_user)) do
               {:ok, :dead} ->
                 # Also deletes exploration creature via cascade
                 {1, _} = Repo.delete_all(ExplorationCreature.associated_creature_query(user))

@@ -4,7 +4,11 @@
   <div>
     <% experience_for_current_level = TamedWilds.UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level) %>
     <% experience_for_next_level = TamedWilds.UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level + 1) %>
+    <% unspent_points = TamedWilds.UserAttributes.unspent_points(@user_attributes) %>
     <p>Level: <%= @user_attributes.level %></p>
+    <%= if unspent_points > 0 do %>
+      <p><i>You have <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/character"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
+    <% end %>
     <progress class="progress progress-primary w-56" value={@user_attributes.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
   </div>
   <div>
