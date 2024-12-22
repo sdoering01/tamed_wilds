@@ -248,7 +248,8 @@ defmodule TamedWilds.UserAttributes do
             current_energy:
               fragment(
                 "least(?, ?)",
-                u.current_energy + u.max_energy * ^by_factor,
+                # 1.0 to make adapter understand that `by_factor` is a float
+                u.current_energy + 1.0 * u.max_energy * ^by_factor,
                 u.max_energy
               )
           ]
@@ -266,7 +267,8 @@ defmodule TamedWilds.UserAttributes do
             current_health:
               fragment(
                 "least(?, ?)",
-                u.current_health + u.max_health * ^by_factor,
+                # 1.0 to make adapter understand that `by_factor` is a float
+                u.current_health + 1.0 * u.max_health * ^by_factor,
                 u.max_health
               )
           ]

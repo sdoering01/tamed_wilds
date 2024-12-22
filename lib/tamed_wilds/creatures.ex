@@ -25,7 +25,8 @@ defmodule TamedWilds.Creatures do
             current_health:
               fragment(
                 "least(ceil(?), ?)",
-                c.current_health + c.max_health * ^by_factor,
+                # 1.0 to make adapter understand that `by_factor` is a float
+                c.current_health + 1.0 * c.max_health * ^by_factor,
                 c.max_health
               )
           ]
