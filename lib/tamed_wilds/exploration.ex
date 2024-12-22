@@ -276,12 +276,10 @@ defmodule TamedWilds.Exploration do
     {health_points, energy_points, damage_points, resistance_points} = randomize_attributes(level)
 
     # Set health points to max health
-    health_factor_increase_per_health_point = 0.05
-
     max_health =
       round(
         creature_res.max_health *
-          (1 + health_points * health_factor_increase_per_health_point)
+          (1 + health_points * Creature.health_factor_increase_per_health_point_untamed())
       )
 
     creature = %Creature{

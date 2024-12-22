@@ -6,7 +6,11 @@ defmodule TamedWilds.Creatures.Creature do
   alias __MODULE__
   alias TamedWilds.Accounts.User
 
-  @damage_factor_increase_per_damage_point 0.05
+  @damage_factor_increase_per_damage_point_untamed 0.05
+  @damage_factor_increase_per_damage_point_tamed 0.02
+
+  @health_factor_increase_per_health_point_untamed 0.20
+  @health_factor_increase_per_health_point_tamed 0.05
 
   schema "creatures" do
     field :res_id, :integer
@@ -70,14 +74,14 @@ defmodule TamedWilds.Creatures.Creature do
 
   def outgoing_damage_factor(%Creature{} = creature) do
     if is_nil(creature.tamed_by) do
-      1 + creature.damage_points * @damage_factor_increase_per_damage_point
+      1 + creature.damage_points * @damage_factor_increase_per_damage_point_untamed
     else
       user_skilled_points = creature.damage_points - creature.damage_points_after_tamed
 
       factor_after_tamed =
-        1 + creature.damage_points_after_tamed * @damage_factor_increase_per_damage_point
+        1 + creature.damage_points_after_tamed * @damage_factor_increase_per_damage_point_untamed
 
-      factor_skilled = 1 + user_skilled_points * @damage_factor_increase_per_damage_point
+      factor_skilled = 1 + user_skilled_points * @damage_factor_increase_per_damage_point_tamed
 
       # Gives a bonus for tamed creatures that are skilled
       factor_after_tamed * factor_skilled
@@ -104,4 +108,7 @@ defmodule TamedWilds.Creatures.Creature do
       end
     end
   end
+
+  def health_factor_increase_per_health_point_untamed,
+    do: @health_factor_increase_per_health_point_untamed
 end
