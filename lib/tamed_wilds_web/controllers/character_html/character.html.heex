@@ -28,7 +28,7 @@
   </p>
 
   <p>
-    Damage: <%= UserAttributes.outgoing_damage_percentage(@user_attributes) %>%
+    Damage: <%= round(UserAttributes.outgoing_damage_factor(@user_attributes) * 100) %>%
     <%= if unspent_points > 0 do %>
       <.link href={~p"/character/attributes/spend_point?attribute=damage"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
     <% end %>

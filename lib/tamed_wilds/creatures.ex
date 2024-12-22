@@ -15,7 +15,7 @@ defmodule TamedWilds.Creatures do
     creature |> Creature.tame_changeset(user, tamed_at) |> Repo.update()
   end
 
-  def regenerate_health_of_tamed_creatures(by_percentage) do
+  def regenerate_health_of_tamed_creatures(by_factor) do
     query =
       from c in Creature,
         where: not is_nil(c.tamed_by),
@@ -25,8 +25,7 @@ defmodule TamedWilds.Creatures do
             current_health:
               fragment(
                 "least(ceil(?), ?)",
-                # 100.0 is used to force float division
-                c.current_health + c.max_health * ^by_percentage / 100.0,
+                c.current_health + c.max_health * ^by_factor,
                 c.max_health
               )
           ]

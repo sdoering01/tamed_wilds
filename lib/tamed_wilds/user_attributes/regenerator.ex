@@ -4,9 +4,9 @@ defmodule TamedWilds.UserAttributes.Regenerator do
   alias TamedWilds.UserAttributes
   alias TamedWilds.Creatures
 
-  @user_energy_percentage_per_tick 10
-  @user_health_percentage_per_tick 10
-  @creature_health_percentage_per_tick 5
+  @user_energy_factor_per_tick 0.10
+  @user_health_factor_per_tick 0.10
+  @creature_health_factor_per_tick 0.05
   @tick_interval :timer.minutes(1)
 
   def start_link(state) do
@@ -21,9 +21,9 @@ defmodule TamedWilds.UserAttributes.Regenerator do
   def handle_info(:regenerate, state) do
     queue_regeneration()
 
-    UserAttributes.regenerate_energy_of_all_users(@user_energy_percentage_per_tick)
-    UserAttributes.regenerate_health_of_all_users(@user_health_percentage_per_tick)
-    Creatures.regenerate_health_of_tamed_creatures(@creature_health_percentage_per_tick)
+    UserAttributes.regenerate_energy_of_all_users(@user_energy_factor_per_tick)
+    UserAttributes.regenerate_health_of_all_users(@user_health_factor_per_tick)
+    Creatures.regenerate_health_of_tamed_creatures(@creature_health_factor_per_tick)
 
     {:noreply, state}
   end

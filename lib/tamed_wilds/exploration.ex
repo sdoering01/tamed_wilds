@@ -54,17 +54,17 @@ defmodule TamedWilds.Exploration do
     base_damage_by_user = 2
 
     damage_by_user =
-      base_damage_by_user * UserAttributes.outgoing_damage_percentage(user_attributes) / 100
+      base_damage_by_user * UserAttributes.outgoing_damage_factor(user_attributes)
 
     damage_by_companion =
       if is_nil(companion),
         do: 0,
         else:
           Res.Creature.get_by_res_id(companion.res_id).damage *
-            Creature.outgoing_damage_percentage(companion) / 100
+            Creature.outgoing_damage_factor(companion)
 
     damage_to_creature =
-      (damage_by_user + damage_by_companion) * Creature.incoming_damage_percentage(creature) / 100
+      (damage_by_user + damage_by_companion) * Creature.incoming_damage_factor(creature)
 
     query = ExplorationCreature.do_damage_query(user, round(damage_to_creature))
 
@@ -83,15 +83,14 @@ defmodule TamedWilds.Exploration do
             creature_res = Res.Creature.get_by_res_id(creature_res_id)
 
             damage_by_creature =
-              creature_res.damage * Creature.outgoing_damage_percentage(creature) / 100
+              creature_res.damage * Creature.outgoing_damage_factor(creature)
 
             damage_to_user =
-              damage_by_creature * UserAttributes.incoming_damage_percentage(user_attributes) /
-                100
+              damage_by_creature * UserAttributes.incoming_damage_factor(user_attributes)
 
             if not is_nil(companion) do
               damage_to_companion =
-                damage_by_creature * Creature.incoming_damage_percentage(creature) / 100
+                damage_by_creature * Creature.incoming_damage_factor(creature)
 
               {:ok, _} =
                 UserAttributes.do_damage_to_companion(user, companion, round(damage_to_companion))
@@ -267,12 +266,12 @@ defmodule TamedWilds.Exploration do
     {health_points, energy_points, damage_points, resistance_points} = randomize_attributes(level)
 
     # Set health points to max health
-    health_percentage_increase_per_health_point = 5
+    health_factor_increase_per_health_point = 0.05
 
     max_health =
       round(
         creature_res.max_health *
-          (1 + health_points * health_percentage_increase_per_health_point / 100)
+          (1 + health_points * health_factor_increase_per_health_point)
       )
 
     creature = %Creature{

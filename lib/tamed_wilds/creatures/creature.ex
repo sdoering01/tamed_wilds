@@ -6,7 +6,7 @@ defmodule TamedWilds.Creatures.Creature do
   alias __MODULE__
   alias TamedWilds.Accounts.User
 
-  @damage_percentage_increase_per_damage_point 5
+  @damage_factor_increase_per_damage_point 0.05
 
   schema "creatures" do
     field :res_id, :integer
@@ -67,15 +67,15 @@ defmodule TamedWilds.Creatures.Creature do
       select: c
   end
 
-  def outgoing_damage_percentage(%Creature{} = creature) do
-    100 + creature.damage_points * @damage_percentage_increase_per_damage_point
+  def outgoing_damage_factor(%Creature{} = creature) do
+    1 + creature.damage_points * @damage_factor_increase_per_damage_point
   end
 
-  def incoming_damage_percentage(%Creature{} = creature) do
+  def incoming_damage_factor(%Creature{} = creature) do
     if creature.resistance_points == 0 do
-      100
+      1
     else
-      :math.pow(0.98, :math.log(creature.resistance_points) / :math.log(1.5)) * 100
+      :math.pow(0.98, :math.log(creature.resistance_points) / :math.log(1.5))
     end
   end
 end

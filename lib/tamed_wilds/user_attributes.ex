@@ -11,7 +11,7 @@ defmodule TamedWilds.UserAttributes do
   @attributes [:health, :energy, :damage, :resistance]
   @max_health_increase_per_health_point 10
   @max_energy_increase_per_energy_point 10
-  @damage_percentage_increase_per_damage_point 5
+  @damage_factor_increase_per_damage_point 0.05
 
   @base_max_health 100
   @base_max_energy 100
@@ -124,7 +124,7 @@ defmodule TamedWilds.UserAttributes do
     Repo.one(query)
   end
 
-  def min_hp_percentage_for_set_companion, do: 20
+  def min_hp_factor_for_set_companion, do: 0.20
 
   def clear_companion(%User{} = user) do
     {1, _} = Repo.update_all(by_user(user), set: [companion_id: nil])
@@ -143,7 +143,7 @@ defmodule TamedWilds.UserAttributes do
             {:error, :not_tamed_by_user}
 
           creature.current_health <
-              creature.max_health * min_hp_percentage_for_set_companion() / 100 ->
+              creature.max_health * min_hp_factor_for_set_companion() ->
             {:error, :companion_too_low_health}
 
           true ->
@@ -227,19 +227,19 @@ defmodule TamedWilds.UserAttributes do
     :ok
   end
 
-  def outgoing_damage_percentage(%UserAttributes{} = user_attributes) do
-    100 + user_attributes.damage_points * @damage_percentage_increase_per_damage_point
+  def outgoing_damage_factor(%UserAttributes{} = user_attributes) do
+    1 + user_attributes.damage_points * @damage_factor_increase_per_damage_point
   end
 
-  def incoming_damage_percentage(%UserAttributes{} = user_attributes) do
+  def incoming_damage_factor(%UserAttributes{} = user_attributes) do
     if user_attributes.resistance_points == 0 do
-      100
+      1
     else
-      :math.pow(0.98, :math.log(user_attributes.resistance_points) / :math.log(1.5)) * 100
+      :math.pow(0.98, :math.log(user_attributes.resistance_points) / :math.log(1.5))
     end
   end
 
-  def regenerate_energy_of_all_users(by_percentage) do
+  def regenerate_energy_of_all_users(by_factor) do
     query =
       from u in UserAttributes,
         where: u.current_energy < u.max_energy,
@@ -248,7 +248,7 @@ defmodule TamedWilds.UserAttributes do
             current_energy:
               fragment(
                 "least(?, ?)",
-                u.current_energy + u.max_energy * ^by_percentage / 100.0,
+                u.current_energy + u.max_energy * ^by_factor,
                 u.max_energy
               )
           ]
@@ -257,7 +257,7 @@ defmodule TamedWilds.UserAttributes do
     Repo.update_all(query, [])
   end
 
-  def regenerate_health_of_all_users(by_percentage) do
+  def regenerate_health_of_all_users(by_factor) do
     query =
       from u in UserAttributes,
         where: u.current_health < u.max_health,
@@ -266,7 +266,7 @@ defmodule TamedWilds.UserAttributes do
             current_health:
               fragment(
                 "least(?, ?)",
-                u.current_health + u.max_health * ^by_percentage / 100.0,
+                u.current_health + u.max_health * ^by_factor,
                 u.max_health
               )
           ]

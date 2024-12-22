@@ -16,7 +16,7 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
       level: level,
       creatures: creatures,
       companion_id: user_attributes.companion_id,
-      min_hp_percentage_for_set_companion: UserAttributes.min_hp_percentage_for_set_companion()
+      min_hp_factor_for_set_companion: UserAttributes.min_hp_factor_for_set_companion()
     )
   end
 
@@ -33,7 +33,7 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
           put_flash(
             conn,
             :error,
-            "You cannot choose a creature with less than #{UserAttributes.min_hp_percentage_for_set_companion()}% health as your companion!"
+            "You cannot choose a creature with less than #{round(UserAttributes.min_hp_factor_for_set_companion() * 100)}% health as your companion!"
           )
 
         :ok ->
