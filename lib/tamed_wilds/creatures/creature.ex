@@ -22,6 +22,7 @@ defmodule TamedWilds.Creatures.Creature do
     field :damage_points, :integer
     field :resistance_points, :integer
 
+    # Attribute points right after taming
     field :health_points_after_tamed, :integer
     field :energy_points_after_tamed, :integer
     field :damage_points_after_tamed, :integer
@@ -68,14 +69,39 @@ defmodule TamedWilds.Creatures.Creature do
   end
 
   def outgoing_damage_factor(%Creature{} = creature) do
-    1 + creature.damage_points * @damage_factor_increase_per_damage_point
+    if is_nil(creature.tamed_by) do
+      1 + creature.damage_points * @damage_factor_increase_per_damage_point
+    else
+      user_skilled_points = creature.damage_points - creature.damage_points_after_tamed
+
+      factor_after_tamed =
+        1 + creature.damage_points_after_tamed * @damage_factor_increase_per_damage_point
+
+      factor_skilled = 1 + user_skilled_points * @damage_factor_increase_per_damage_point
+
+      # Gives a bonus for tamed creatures that are skilled
+      factor_after_tamed * factor_skilled
+    end
   end
 
   def incoming_damage_factor(%Creature{} = creature) do
     if creature.resistance_points == 0 do
       1
     else
-      :math.pow(0.98, :math.log(creature.resistance_points) / :math.log(1.5))
+      if is_nil(creature.tamed_by) do
+        :math.pow(0.98, :math.log(creature.resistance_points) / :math.log(1.5))
+      else
+        user_skilled_points = creature.resistance_points - creature.resistance_points_after_tamed
+
+        factor_after_tamed =
+          :math.pow(0.98, :math.log(creature.resistance_points_after_tamed) / :math.log(1.5))
+
+        factor_skilled =
+          :math.pow(0.98, :math.log(user_skilled_points) / :math.log(1.5))
+
+        # Gives a bonus for tamed creatures that are skilled
+        factor_after_tamed * factor_skilled
+      end
     end
   end
 end
