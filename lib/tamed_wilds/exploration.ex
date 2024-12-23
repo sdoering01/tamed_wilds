@@ -279,7 +279,7 @@ defmodule TamedWilds.Exploration do
     max_health =
       round(
         creature_res.max_health *
-          (1 + health_points * Creature.health_factor_increase_per_health_point_untamed())
+          (1 + health_points * Creature.health_factor_increase_per_health_point_wild())
       )
 
     creature = %Creature{
@@ -287,10 +287,10 @@ defmodule TamedWilds.Exploration do
       current_health: max_health,
       max_health: max_health,
       level: level,
-      health_points: health_points,
-      energy_points: energy_points,
-      damage_points: damage_points,
-      resistance_points: resistance_points
+      health_points_wild: health_points,
+      energy_points_wild: energy_points,
+      damage_points_wild: damage_points,
+      resistance_points_wild: resistance_points
     }
 
     creature
