@@ -7,6 +7,8 @@ defmodule TamedWilds.Creatures.Creature do
   alias TamedWilds.Accounts.User
   alias TamedWilds.GameResources, as: Res
 
+  @attributes [:health, :energy, :damage, :resistance]
+
   @damage_factor_increase_per_damage_point_wild 0.05
   @damage_factor_increase_per_damage_point_tamed 0.02
 
@@ -100,4 +102,66 @@ defmodule TamedWilds.Creatures.Creature do
     # Gives a bonus for tamed creatures that are skilled
     round(factor_wild * factor_tamed * creature_res.base_max_health)
   end
+
+  def unspent_points(%Creature{} = creature) do
+    total_points_tamed = creature.level - creature.level_after_tamed
+
+    unspent_points =
+      total_points_tamed -
+        creature.health_points_tamed -
+        creature.energy_points_tamed -
+        creature.damage_points_tamed -
+        creature.resistance_points_tamed
+
+    unspent_points
+  end
+
+  def filter_has_unspent_points(%Ecto.Query{} = query) do
+    from c in query,
+      where:
+        c.level - c.level_after_tamed - c.health_points_tamed - c.energy_points_tamed -
+          c.damage_points_tamed - c.resistance_points_tamed > 0
+  end
+
+  def spend_attribute_point_update(%Creature{} = creature, attribute)
+      when attribute in @attributes do
+    case attribute do
+      :health ->
+        creature_res = Res.Creature.get_by_res_id(creature.res_id)
+
+        new_health_points_tamed = creature.health_points_tamed + 1
+
+        new_max_health =
+          max_health_from_attributes(
+            creature_res,
+            creature.health_points_wild,
+            new_health_points_tamed
+          )
+
+        # Using `set` instead of `inc` so that concurrent requests don't
+        # cannot increase the points two times but set the max health to the
+        # same new value.
+        #
+        # This way, the two concurrent queries would have the same effect. But
+        # unspent points are based on the amount of spent points anyways, so
+        # that this is fine.
+        [
+          set: [
+            health_points_tamed: new_health_points_tamed,
+            max_health: new_max_health
+          ]
+        ]
+
+      :energy ->
+        [inc: [energy_points_tamed: 1]]
+
+      :damage ->
+        [inc: [damage_points_tamed: 1]]
+
+      :resistance ->
+        [inc: [resistance_points_tamed: 1]]
+    end
+  end
+
+  def attributes(), do: @attributes
 end

@@ -3,6 +3,13 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
 
   use TamedWildsWeb.Camp.Helpers.BuildingController, building_res_id: @stoneheart_res_id
 
+  plug TamedWildsWeb.Camp.Plugs.FetchUserCreature
+       when action in [
+              :show_creature,
+              :spend_creature_attribute_point,
+              :reset_creature_attribute_points
+            ]
+
   alias TamedWilds.{UserAttributes, Creatures}
 
   def index(conn, _params) do
@@ -47,5 +54,32 @@ defmodule TamedWildsWeb.Camp.StoneheartController do
     :ok = UserAttributes.clear_companion(conn.assigns.current_user)
 
     conn |> put_flash(:info, "Companion will stay in Camp!") |> redirect(to: ~p"/camp/stoneheart")
+  end
+
+  def show_creature(conn, _params) do
+    render(conn, "show_creature.html", creature: conn.assigns.current_creature)
+  end
+
+  def spend_creature_attribute_point(conn, %{"attribute" => attribute}) do
+    attribute = String.to_existing_atom(attribute)
+
+    conn =
+      case Creatures.spend_attribute_point(conn.assigns.current_creature, attribute) do
+        :ok ->
+          put_flash(conn, :info, "Spent point on #{attribute}!")
+
+        {:error, :not_enough_points} ->
+          put_flash(conn, :error, "Not enough points!")
+      end
+
+    redirect(conn, to: ~p"/camp/stoneheart/creatures/#{conn.assigns.current_creature.id}")
+  end
+
+  def reset_creature_attribute_points(conn, _params) do
+    :ok = Creatures.reset_attribute_points(conn.assigns.current_creature)
+
+    conn
+    |> put_flash(:info, "Reset attribute points!")
+    |> redirect(to: ~p"/camp/stoneheart/creatures/#{conn.assigns.current_creature.id}")
   end
 end

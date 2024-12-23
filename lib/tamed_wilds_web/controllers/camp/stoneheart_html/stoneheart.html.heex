@@ -26,6 +26,9 @@
             <%= if companion? do %>
               <span class="badge badge-primary">Companion</span>
             <% end %>
+            <.link href={~p"/camp/stoneheart/creatures/#{creature.id}"} class="btn btn-sm btn-square ml-auto">
+              <span class="hero-chevron-right"></span>
+            </.link>
           </h4>
           <progress class="progress progress-success w-56" value={creature.current_health} max={creature.max_health}></progress>
           <p>Health: <%= creature.current_health %>/<%= creature.max_health %></p>

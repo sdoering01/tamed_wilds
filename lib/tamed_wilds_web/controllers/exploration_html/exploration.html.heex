@@ -24,9 +24,13 @@
   <% companion = @user_attributes.companion %>
   <% experience_for_current_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level) %>
   <% experience_for_next_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level + 1) %>
+  <% unspent_points = TamedWilds.Creatures.Creature.unspent_points(companion) %>
 
   <div class="mb-4">
     <p>Companion: <%= TamedWilds.GameResources.Creature.get_by_res_id(companion.res_id).name %> (Level <%= companion.level %>)</p>
+    <%= if unspent_points > 0 do %>
+      <p><i>Your companion has <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/camp/stoneheart/creatures/#{companion.id}"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
+    <% end %>
     <progress class="progress progress-primary w-56" value={companion.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress> <br />
     <progress class="progress progress-success w-56" value={companion.current_health} max={companion.max_health}></progress>
     <p>Health: <%= companion.current_health %> / <%= companion.max_health %></p>

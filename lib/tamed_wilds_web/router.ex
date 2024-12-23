@@ -67,6 +67,15 @@ defmodule TamedWildsWeb.Router do
         get "/", Camp.StoneheartController, :index
         post "/choose_companion", Camp.StoneheartController, :choose_companion
         post "/leave_companion", Camp.StoneheartController, :leave_companion
+
+        scope "/creatures/:creature_id" do
+          get "/", Camp.StoneheartController, :show_creature
+
+          scope "/attributes" do
+            post "/spend_point", Camp.StoneheartController, :spend_creature_attribute_point
+            post "/reset_points", Camp.StoneheartController, :reset_creature_attribute_points
+          end
+        end
       end
 
       scope "/campfire" do

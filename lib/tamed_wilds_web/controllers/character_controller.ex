@@ -18,7 +18,7 @@ defmodule TamedWildsWeb.CharacterController do
           put_flash(conn, :info, "Spent point on #{attribute}!")
 
         {:error, :not_enough_points} ->
-          put_flash(conn, :error, "Not enough points")
+          put_flash(conn, :error, "Not enough points!")
       end
 
     redirect(conn, to: ~p"/character")

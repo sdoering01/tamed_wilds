@@ -1,0 +1,50 @@
+<div class="flex items-center gap-1 mb-2">
+  <.link href={~p"/camp/stoneheart"} class="btn btn-ghost btn-sm btn-square"><span class="hero-chevron-left"></span></.link>
+  <h2 class="page-title">
+    <%= Res.Creature.get_by_res_id(@creature.res_id).name %> (Level <%= @creature.level %>)
+  </h2>
+</div>
+
+<div class="mb-4">
+  <% experience_for_current_level = CreatureLevel.get_experience_for_level(@creature, @creature.level) %>
+  <% experience_for_next_level = CreatureLevel.get_experience_for_level(@creature, @creature.level + 1) %>
+  <p>Level: <%= @creature.level %></p>
+  <progress class="progress progress-primary w-56" value={@creature.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
+  <p>Experience: <%= @creature.experience %> / <%= experience_for_next_level %></p>
+</div>
+
+<% unspent_points = Creature.unspent_points(@creature) %>
+
+<div class="flex flex-col items-start gap-2">
+  <p class="mb-2">Unspent points: <%= unspent_points %></p>
+
+  <p>
+    Health: <%= @creature.current_health %> / <%= @creature.max_health %>
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/camp/stoneheart/creatures/#{@creature.id}/attributes/spend_point?attribute=health"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <p class="flex items-center gap-2">
+    Energy: <%= @creature.energy_points_wild + @creature.energy_points_tamed %>
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/camp/stoneheart/creatures/#{@creature.id}/attributes/spend_point?attribute=energy"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <p>
+    Damage: <%= round(Creature.outgoing_damage_factor(@creature) * 100) %>%
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/camp/stoneheart/creatures/#{@creature.id}/attributes/spend_point?attribute=damage"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <p>
+    Resistance: <%= @creature.resistance_points_wild + @creature.resistance_points_tamed %>
+    <%= if unspent_points > 0 do %>
+      <.link href={~p"/camp/stoneheart/creatures/#{@creature.id}/attributes/spend_point?attribute=resistance"} method="post" class="btn btn-primary btn-square btn-xs">+</.link>
+    <% end %>
+  </p>
+
+  <.link href={~p"/camp/stoneheart/creatures/#{@creature.id}/attributes/reset_points"} method="post" class="btn btn-error btn-sm mt-2" data-confirm="Do you really want to reset all attribute points?">Reset points</.link>
+</div>

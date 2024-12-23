@@ -4,6 +4,9 @@ defmodule TamedWilds.Creatures do
   alias TamedWilds.Accounts.User
   alias TamedWilds.Creatures.{Creature, CreatureLevel}
   alias TamedWilds.Repo
+  alias TamedWilds.GameResources, as: Res
+
+  @attributes Creature.attributes()
 
   def get_user_creatures(%User{} = user) do
     Creature.tamed_by_user(user) |> Repo.all()
@@ -56,6 +59,45 @@ defmodule TamedWilds.Creatures do
       {1, _} = Repo.update_all(query, [])
     end
 
+    :ok
+  end
+
+  @doc """
+  Caller has to make sure that the creature belongs to the user.
+  """
+  def spend_attribute_point(%Creature{} = creature, attribute) when attribute in @attributes do
+    query = Creature.by_id(creature.id) |> Creature.filter_has_unspent_points()
+
+    case Repo.update_all(query, Creature.spend_attribute_point_update(creature, attribute)) do
+      {0, _} -> {:error, :not_enough_points}
+      _ -> :ok
+    end
+  end
+
+  @doc """
+  Caller has to make sure that the creature belongs to the user.
+  """
+  def reset_attribute_points(%Creature{} = creature) do
+    creature_res = Res.Creature.get_by_res_id(creature.res_id)
+
+    new_max_health =
+      Creature.max_health_from_attributes(creature_res, creature.health_points_wild, 0)
+
+    query =
+      from c in Creature,
+        where: c.id == ^creature.id,
+        update: [
+          set: [
+            health_points_tamed: 0,
+            energy_points_tamed: 0,
+            damage_points_tamed: 0,
+            resistance_points_tamed: 0,
+            max_health: ^new_max_health,
+            current_health: fragment("least(?, ?)", c.current_health, ^new_max_health)
+          ]
+        ]
+
+    {1, _} = Repo.update_all(query, [])
     :ok
   end
 end
