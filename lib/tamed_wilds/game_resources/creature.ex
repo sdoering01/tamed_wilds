@@ -6,8 +6,8 @@ defmodule TamedWilds.GameResources.Creature do
     defstruct [:feedings, :feeding_interval_ms]
   end
 
-  @enforce_keys [:res_id, :name, :max_health, :damage, :base_kill_experience, :loot, :taming]
-  defstruct [:res_id, :name, :max_health, :damage, :base_kill_experience, :loot, :taming]
+  @enforce_keys [:res_id, :name, :base_max_health, :damage, :base_kill_experience, :loot, :taming]
+  defstruct [:res_id, :name, :base_max_health, :damage, :base_kill_experience, :loot, :taming]
 
   @spec get_by_res_id(integer()) :: %Creature{}
   def get_by_res_id(res_id) do
@@ -23,7 +23,7 @@ defmodule TamedWilds.GameResources.Creature do
       1 => %Creature{
         res_id: 1,
         name: "Sparrow",
-        max_health: 10,
+        base_max_health: 10,
         damage: 2,
         base_kill_experience: 60,
         loot: %{
@@ -38,7 +38,7 @@ defmodule TamedWilds.GameResources.Creature do
       2 => %Creature{
         res_id: 2,
         name: "Rabbit",
-        max_health: 15,
+        base_max_health: 15,
         damage: 3,
         base_kill_experience: 100,
         loot: %{

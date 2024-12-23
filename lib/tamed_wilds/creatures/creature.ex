@@ -5,6 +5,7 @@ defmodule TamedWilds.Creatures.Creature do
 
   alias __MODULE__
   alias TamedWilds.Accounts.User
+  alias TamedWilds.GameResources, as: Res
 
   @damage_factor_increase_per_damage_point_wild 0.05
   @damage_factor_increase_per_damage_point_tamed 0.02
@@ -87,6 +88,16 @@ defmodule TamedWilds.Creatures.Creature do
     factor_wild * factor_tamed
   end
 
-  def health_factor_increase_per_health_point_wild,
-    do: @health_factor_increase_per_health_point_wild
+  def max_health_from_attributes(
+        %Res.Creature{} = creature_res,
+        health_points_wild,
+        health_points_tamed
+      ) do
+    factor_wild = 1 + health_points_wild * @health_factor_increase_per_health_point_wild
+
+    factor_tamed = 1 + health_points_tamed * @health_factor_increase_per_health_point_tamed
+
+    # Gives a bonus for tamed creatures that are skilled
+    round(factor_wild * factor_tamed * creature_res.base_max_health)
+  end
 end
