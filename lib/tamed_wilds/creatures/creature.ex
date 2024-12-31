@@ -15,6 +15,8 @@ defmodule TamedWilds.Creatures.Creature do
   @health_factor_increase_per_health_point_wild 0.20
   @health_factor_increase_per_health_point_tamed 0.05
 
+  @food_value_to_tame_factor_increase_per_level 0.08
+
   schema "creatures" do
     field :res_id, :integer
     field :current_health, :integer
@@ -59,6 +61,12 @@ defmodule TamedWilds.Creatures.Creature do
       tamed_at: tamed_at,
       level_after_tamed: creature.level
     )
+  end
+
+  def food_value_to_tame(%Res.Creature{} = creature_res, level) do
+    factor = 1 + @food_value_to_tame_factor_increase_per_level * (level - 1)
+
+    round(creature_res.taming.base_food_value_to_tame * factor)
   end
 
   def with_do_damage(%Ecto.Query{} = query, damage) do

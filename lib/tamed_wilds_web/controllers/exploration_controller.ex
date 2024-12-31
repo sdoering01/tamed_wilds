@@ -1,7 +1,8 @@
 defmodule TamedWildsWeb.ExplorationController do
   use TamedWildsWeb, :controller
 
-  alias TamedWilds.{Exploration, UserAttributes, QuantityMap, Camp}
+  alias TamedWilds.{Exploration, UserAttributes, QuantityMap, Camp, Inventory}
+  alias TamedWilds.GameResources, as: Res
 
   def index(conn, _params) do
     user_attributes = UserAttributes.get!(conn.assigns.current_user)
@@ -12,11 +13,21 @@ defmodule TamedWildsWeb.ExplorationController do
 
     stoneheart_built? = Camp.stoneheart_built?(conn.assigns.current_user)
 
+    creature_food_list = Res.Item.get_creature_food_list()
+    item_quantity_map = Inventory.get_item_quantity_map(conn.assigns.current_user)
+
+    food_quantity_map =
+      Map.take(
+        item_quantity_map,
+        get_in(creature_food_list, [Access.all(), Access.key!(:res_id)])
+      )
+
     render(conn, :exploration,
       user_attributes: user_attributes,
       exploration_creature: exploration_creature,
       taming_processes: taming_processes,
-      stoneheart_built?: stoneheart_built?
+      stoneheart_built?: stoneheart_built?,
+      food_quantity_map: food_quantity_map
     )
   end
 
@@ -102,9 +113,15 @@ defmodule TamedWildsWeb.ExplorationController do
     conn |> redirect(to: ~p"/exploration")
   end
 
-  def taming_feed(conn, %{"id" => taming_process_id}) do
+  def taming_feed(conn, %{"tp_id" => taming_process_id, "item_res_id" => item_res_id}) do
+    item_res_id = String.to_integer(item_res_id)
+
     conn =
-      case Exploration.feed_taming_creature(conn.assigns.current_user, taming_process_id) do
+      case Exploration.feed_taming_creature(
+             conn.assigns.current_user,
+             taming_process_id,
+             item_res_id
+           ) do
         {:ok, :creature_fed} ->
           put_flash(conn, :info, "You fed the creature!")
 
@@ -116,6 +133,9 @@ defmodule TamedWildsWeb.ExplorationController do
 
         {:error, :not_enough_items} ->
           put_flash(conn, :error, "You don't have enough items to feed the creature!")
+
+        {:error, :not_a_food} ->
+          put_flash(conn, :error, "This item is not a food!")
 
         {:error, :taming_process_not_found} ->
           put_flash(conn, :error, "This taming process couldn't be found!")

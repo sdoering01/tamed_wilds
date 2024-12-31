@@ -2,8 +2,8 @@ defmodule TamedWilds.GameResources.Creature do
   alias __MODULE__
 
   defmodule Taming do
-    @enforce_keys [:feedings, :feeding_interval_ms]
-    defstruct [:feedings, :feeding_interval_ms]
+    @enforce_keys [:base_food_value_to_tame, :feeding_interval_ms]
+    defstruct [:base_food_value_to_tame, :feeding_interval_ms]
   end
 
   @enforce_keys [:res_id, :name, :base_max_health, :damage, :base_kill_experience, :loot, :taming]
@@ -31,7 +31,7 @@ defmodule TamedWilds.GameResources.Creature do
           7 => 1
         },
         taming: %Taming{
-          feedings: 3,
+          base_food_value_to_tame: 30,
           feeding_interval_ms: :timer.seconds(10)
         }
       },
@@ -46,7 +46,7 @@ defmodule TamedWilds.GameResources.Creature do
           8 => 1
         },
         taming: %Taming{
-          feedings: 3,
+          base_food_value_to_tame: 40,
           feeding_interval_ms: :timer.seconds(10)
         }
       }

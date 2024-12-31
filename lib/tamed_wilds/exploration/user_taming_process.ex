@@ -9,7 +9,9 @@ defmodule TamedWilds.Exploration.UserTamingProcess do
   schema "user_taming_processes" do
     field :started_at, :utc_datetime_usec
     field :next_feeding_at, :utc_datetime_usec
-    field :feedings_left, :integer
+
+    field :current_food_value, :integer
+    field :food_value_to_tame, :integer
 
     belongs_to :creature, Creature
     belongs_to :user, User

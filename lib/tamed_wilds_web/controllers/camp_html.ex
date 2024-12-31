@@ -1,8 +1,6 @@
 defmodule TamedWildsWeb.CampHTML do
   use TamedWildsWeb, :html
 
-  alias TamedWilds.GameResources, as: Res
-
   attr :is_link, :boolean, required: true
   attr :href, :string, required: true
   slot :inner_block, required: true

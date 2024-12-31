@@ -160,6 +160,7 @@ defmodule TamedWilds.Exploration do
           creature_res = Res.Creature.get_by_res_id(creature.res_id)
 
           now = DateTime.utc_now()
+          food_value_to_tame = Creature.food_value_to_tame(creature_res, creature.level)
 
           user_taming_process = %UserTamingProcess{
             user_id: user.id,
@@ -167,7 +168,7 @@ defmodule TamedWilds.Exploration do
             started_at: now,
             next_feeding_at:
               DateTime.add(now, creature_res.taming.feeding_interval_ms, :millisecond),
-            feedings_left: creature_res.taming.feedings
+            food_value_to_tame: food_value_to_tame
           }
 
           {:ok, _} = Repo.insert(user_taming_process)
@@ -176,7 +177,7 @@ defmodule TamedWilds.Exploration do
     end)
   end
 
-  def feed_taming_creature(%User{} = user, taming_process_id) do
+  def feed_taming_creature(%User{} = user, taming_process_id, food_item_res_id) do
     query =
       UserTamingProcess.by_user_and_id(user, taming_process_id)
       |> UserTamingProcess.with_creature()
@@ -188,51 +189,57 @@ defmodule TamedWilds.Exploration do
         if DateTime.after?(taming_process.next_feeding_at, now) do
           {:error, :cannot_feed_yet}
         else
-          berry = Res.Item.get_by_res_id(4)
+          food_item_res = Res.Item.get_by_res_id(food_item_res_id)
+          food_value = get_in(food_item_res.creature_food.value)
 
-          Repo.transact(fn ->
-            case Inventory.remove_item(user, berry, 1) do
-              :ok ->
-                query =
-                  UserTamingProcess.by_user_and_id(user, taming_process_id)
-                  # Prevents feeding multiple times
-                  |> UserTamingProcess.where_next_feeding_before(now)
+          if is_nil(food_value) do
+            {:error, :not_a_food}
+          else
+            Repo.transact(fn ->
+              case Inventory.remove_item(user, food_item_res, 1) do
+                :ok ->
+                  query =
+                    UserTamingProcess.by_user_and_id(user, taming_process_id)
+                    # Prevents feeding multiple times
+                    |> UserTamingProcess.where_next_feeding_before(now)
 
-                creature_res = Res.Creature.get_by_res_id(taming_process.creature.res_id)
+                  creature_res = Res.Creature.get_by_res_id(taming_process.creature.res_id)
 
-                if taming_process.feedings_left <= 1 do
-                  {1, _} = Repo.delete_all(query)
-                  {:ok, _} = Creatures.tame_creature(user, taming_process.creature, now)
+                  if taming_process.current_food_value + food_value >=
+                       taming_process.food_value_to_tame do
+                    {1, _} = Repo.delete_all(query)
+                    {:ok, _} = Creatures.tame_creature(user, taming_process.creature, now)
 
-                  experience_gain =
-                    round(
-                      Res.Creature.get_base_tame_experience(creature_res) *
-                        experience_factor(taming_process.creature.level)
-                    )
+                    experience_gain =
+                      round(
+                        Res.Creature.get_base_tame_experience(creature_res) *
+                          experience_factor(taming_process.creature.level)
+                      )
 
-                  :ok = UserAttributes.add_experience(user, experience_gain)
+                    :ok = UserAttributes.add_experience(user, experience_gain)
 
-                  {:ok, :taming_complete}
-                else
-                  next_feeding_at =
-                    DateTime.add(now, creature_res.taming.feeding_interval_ms, :millisecond)
+                    {:ok, :taming_complete}
+                  else
+                    next_feeding_at =
+                      DateTime.add(now, creature_res.taming.feeding_interval_ms, :millisecond)
 
-                  case Repo.update_all(query,
-                         set: [next_feeding_at: next_feeding_at],
-                         inc: [feedings_left: -1]
-                       ) do
-                    {1, _} ->
-                      {:ok, :creature_fed}
+                    case Repo.update_all(query,
+                           set: [next_feeding_at: next_feeding_at],
+                           inc: [current_food_value: food_value]
+                         ) do
+                      {1, _} ->
+                        {:ok, :creature_fed}
 
-                    {0, _} ->
-                      {:error, :taming_process_not_found}
+                      {0, _} ->
+                        {:error, :taming_process_not_found}
+                    end
                   end
-                end
 
-              {:error, :not_enough_items} ->
-                {:error, :not_enough_items}
-            end
-          end)
+                {:error, :not_enough_items} ->
+                  {:error, :not_enough_items}
+              end
+            end)
+          end
         end
 
       nil ->
