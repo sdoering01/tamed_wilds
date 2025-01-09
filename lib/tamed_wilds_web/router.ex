@@ -26,6 +26,11 @@ defmodule TamedWildsWeb.Router do
   scope "/", TamedWildsWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    live_session :exploration_live,
+      on_mount: [{TamedWildsWeb.UserAuth, :ensure_authenticated}] do
+      live "/exploration_live", ExplorationLive
+    end
+
     scope "/exploration" do
       get "/", ExplorationController, :index
       post "/explore", ExplorationController, :explore
