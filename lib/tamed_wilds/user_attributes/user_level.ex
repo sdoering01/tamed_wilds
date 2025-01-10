@@ -20,10 +20,6 @@ defmodule TamedWilds.UserAttributes.UserLevel do
 
   @level_experiences CompileTime.calculate_level_experiences()
 
-  def max_level() do
-    CompileTime.max_level()
-  end
-
   def get_experience_for_level(level) do
     clamped_idx = min(CompileTime.max_level(), level) - 1
     elem(@level_experiences, clamped_idx)

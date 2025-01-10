@@ -2,19 +2,14 @@
 
 <div class="mb-4">
   <div>
+    <% experience_for_current_level = TamedWilds.UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level) %>
+    <% experience_for_next_level = TamedWilds.UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level + 1) %>
     <% unspent_points = TamedWilds.UserAttributes.unspent_points(@user_attributes) %>
-    <% max_level? = @user_attributes.level >= TamedWilds.UserAttributes.UserLevel.max_level() %>
     <p>Level: <%= @user_attributes.level %></p>
     <%= if unspent_points > 0 do %>
       <p><i class="opacity-75">You have <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/character"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
     <% end %>
-    <%= if max_level? do %>
-      <progress class="progress progress-primary w-56" value={1} max={1}></progress>
-    <% else %>
-      <% experience_for_current_level = TamedWilds.UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level) %>
-      <% experience_for_next_level = TamedWilds.UserAttributes.UserLevel.get_experience_for_level(@user_attributes.level + 1) %>
-      <progress class="progress progress-primary w-56" value={@user_attributes.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
-    <% end %>
+    <progress class="progress progress-primary w-56" value={@user_attributes.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
   </div>
   <div>
     <progress class="progress progress-warning w-56" value={@user_attributes.current_energy} max={@user_attributes.max_energy}></progress>
@@ -27,7 +22,8 @@
 
 <%= if @user_attributes.companion do %>
   <% companion = @user_attributes.companion %>
-  <% max_level? = companion.level >= TamedWilds.Creatures.Creature.max_level(companion) %>
+  <% experience_for_current_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level) %>
+  <% experience_for_next_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level + 1) %>
   <% unspent_points = TamedWilds.Creatures.Creature.unspent_points(companion) %>
 
   <div class="mb-4">
@@ -35,13 +31,7 @@
     <%= if unspent_points > 0 do %>
       <p><i class="opacity-75">Your companion has <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i></p>
     <% end %>
-    <%= if max_level? do %>
-      <progress class="progress progress-primary w-56" value={1} max={1}></progress>
-    <% else %>
-      <% experience_for_current_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level) %>
-      <% experience_for_next_level = TamedWilds.Creatures.CreatureLevel.get_experience_for_level(companion, companion.level + 1) %>
-      <progress class="progress progress-primary w-56" value={companion.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
-    <% end %>
+    <progress class="progress progress-primary w-56" value={companion.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress> <br />
     <progress class="progress progress-success w-56" value={companion.current_health} max={companion.max_health}></progress>
     <p>Health: <%= companion.current_health %> / <%= companion.max_health %></p>
     <.link href={~p"/exploration/companion/send_to_camp"} method="post" class="btn btn-secondary btn-sm">Send back to Camp</.link>

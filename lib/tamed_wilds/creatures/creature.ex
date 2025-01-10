@@ -5,7 +5,6 @@ defmodule TamedWilds.Creatures.Creature do
 
   alias __MODULE__
   alias TamedWilds.Accounts.User
-  alias TamedWilds.Creatures.CreatureLevel
   alias TamedWilds.GameResources, as: Res
 
   @attributes [:health, :energy, :damage, :resistance]
@@ -126,10 +125,6 @@ defmodule TamedWilds.Creatures.Creature do
 
     # Gives a bonus for tamed creatures that are skilled
     floor(factor_wild * factor_tamed * creature_res.base_max_health)
-  end
-
-  def max_level(%Creature{} = creature) do
-    creature.level + CreatureLevel.max_level_ups_after_tamed()
   end
 
   def total_points_tamed(%Creature{} = creature) do
