@@ -41,7 +41,8 @@ defmodule TamedWilds.Creatures.CreatureLevel do
 
       0
     else
-      elem(@level_experiences, diff)
+      clamped_idx = min(CompileTime.max_level_ups_after_tamed(), diff) - 1
+      elem(@level_experiences, clamped_idx)
     end
   end
 
