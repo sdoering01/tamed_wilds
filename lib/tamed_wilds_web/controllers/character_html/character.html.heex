@@ -41,5 +41,7 @@
     <% end %>
   </p>
 
-  <.link href={~p"/character/attributes/reset_points"} method="post" class="btn btn-error btn-sm mt-2" data-confirm="Do you really want to reset all attribute points?">Reset points</.link>
+  <%= if unspent_points < UserAttributes.total_points(@user_attributes) do %>
+    <.link href={~p"/character/attributes/reset_points"} method="post" class="btn btn-error btn-sm mt-2" data-confirm="Do you really want to reset all attribute points?">Reset points</.link>
+  <% end %>
 </div>

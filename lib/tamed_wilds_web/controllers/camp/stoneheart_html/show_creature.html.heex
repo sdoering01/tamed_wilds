@@ -47,5 +47,7 @@
     <% end %>
   </p>
 
-  <.link href={~p"/camp/stoneheart/creatures/#{@creature.id}/attributes/reset_points"} method="post" class="btn btn-error btn-sm mt-2" data-confirm="Do you really want to reset all attribute points?">Reset points</.link>
+  <%= if unspent_points < Creature.total_points_tamed(@creature) do %>
+    <.link href={~p"/camp/stoneheart/creatures/#{@creature.id}/attributes/reset_points"} method="post" class="btn btn-error btn-sm mt-2" data-confirm="Do you really want to reset all attribute points?">Reset points</.link>
+  <% end %>
 </div>
