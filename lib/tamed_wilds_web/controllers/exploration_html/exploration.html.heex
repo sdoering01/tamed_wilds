@@ -97,30 +97,32 @@
         <progress class="progress progress-primary w-56" value={taming_process.current_food_value} max={taming_process.food_value_to_tame}></progress>
         <p class="opacity-75">Taming effectiveness: <%= Float.round(taming_effectiveness * 100, 1) %>% (+<%= level_gain %> <%= if level_gain == 1, do: "level", else: "levels" %>)</p>
         <br />
-        <%= if seconds_left > 0 do %>
-          <button class="btn btn-primary" disabled><%= seconds_left %>s until next feeding</button>
-        <% else %>
-          <%= if map_size(@food_quantity_map) > 0 do %>
-            <%= for {item_res_id, quantity} <- @food_quantity_map do %>
-              <.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post" class="btn btn-primary">Feed <%= Res.Item.get_by_res_id(item_res_id).name %></.link>
-            <% end %>
-            <%!--
-              <div class="dropdown dropdown-top">
-                <div tabindex="0" role="button" class="btn btn-primary">Feed</div>
-                <ul tabindex="0" role="menu" class="dropdown-content menu mb-1 bg-base-200 rounded-box w-52 z-[1] border-2 border-primary">
-                  <%= for {item_res_id, quantity} <- @food_quantity_map do %>
-                    <%= if quantity > 0 do %>
-                      <li><.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post">Feed <%= Res.Item.get_by_res_id(item_res_id).name %></.link></li>
-                    <% end %>
-                  <% end %>
-                </ul>
-              </div>
-            --%>
+        <div class="flex items-center flex-wrap gap-1">
+          <%= if seconds_left > 0 do %>
+            <p><%= seconds_left %>s until next feeding</p>
           <% else %>
-            <button class="btn btn-primary" disabled>No food available</button>
+            <%= if map_size(@food_quantity_map) > 0 do %>
+              <%= for {item_res_id, quantity} <- @food_quantity_map do %>
+                <.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post" class="btn btn-primary">Feed <%= Res.Item.get_by_res_id(item_res_id).name %> (<%= quantity %>)</.link>
+              <% end %>
+              <%!--
+                <div class="dropdown dropdown-top">
+                  <div tabindex="0" role="button" class="btn btn-primary">Feed</div>
+                  <ul tabindex="0" role="menu" class="dropdown-content menu mb-1 bg-base-200 rounded-box w-52 z-[1] border-2 border-primary">
+                    <%= for {item_res_id, quantity} <- @food_quantity_map do %>
+                      <%= if quantity > 0 do %>
+                        <li><.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post">Feed <%= Res.Item.get_by_res_id(item_res_id).name %></.link></li>
+                      <% end %>
+                    <% end %>
+                  </ul>
+                </div>
+              --%>
+            <% else %>
+              <button class="btn btn-primary" disabled>No food available</button>
+            <% end %>
           <% end %>
-        <% end %>
-        <.link href={~p"/exploration/taming/cancel?id=#{taming_process.id}"} method="post" data-confirm={"Do you really want to cancel taming #{creature_res.name}?"} class="btn btn-secondary">Cancel</.link>
+          <.link href={~p"/exploration/taming/cancel?id=#{taming_process.id}"} method="post" data-confirm={"Do you really want to cancel taming #{creature_res.name}?"} class="btn btn-secondary">Cancel</.link>
+        </div>
       </li>
     <% end %>
   </ul>
