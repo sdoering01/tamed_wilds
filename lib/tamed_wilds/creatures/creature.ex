@@ -82,7 +82,7 @@ defmodule TamedWilds.Creatures.Creature do
   def food_value_to_tame(%Res.Creature{} = creature_res, level) do
     factor = 1 + @food_value_to_tame_factor_increase_per_level * (level - 1)
 
-    round(creature_res.taming.base_food_value_to_tame * factor)
+    floor(creature_res.taming.base_food_value_to_tame * factor)
   end
 
   def with_do_damage(%Ecto.Query{} = query, damage) do
@@ -124,7 +124,7 @@ defmodule TamedWilds.Creatures.Creature do
     factor_tamed = 1 + health_points_tamed * @health_factor_increase_per_health_point_tamed
 
     # Gives a bonus for tamed creatures that are skilled
-    round(factor_wild * factor_tamed * creature_res.base_max_health)
+    floor(factor_wild * factor_tamed * creature_res.base_max_health)
   end
 
   def total_points_tamed(%Creature{} = creature) do

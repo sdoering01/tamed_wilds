@@ -4,7 +4,7 @@ defmodule TamedWilds.Exploration do
   alias TamedWilds.Repo
   alias TamedWilds.GameResources, as: Res
   alias TamedWilds.Accounts.User
-  alias TamedWilds.{Inventory, UserAttributes, Creatures}
+  alias TamedWilds.{Inventory, UserAttributes, Creatures, Math}
   alias TamedWilds.Exploration.{ExplorationCreature, UserTamingProcess}
 
   @loot_table Res.Item.get_all() |> Map.take([2, 3, 4]) |> Map.values()
@@ -68,7 +68,8 @@ defmodule TamedWilds.Exploration do
     damage_to_creature =
       (damage_by_user + damage_by_companion) * Creature.incoming_damage_factor(creature)
 
-    query = ExplorationCreature.do_damage_query(user, round(damage_to_creature))
+    query =
+      ExplorationCreature.do_damage_query(user, Math.round_probabilistic(damage_to_creature))
 
     Repo.transact(fn ->
       case Repo.update_all(query, []) do
@@ -95,10 +96,14 @@ defmodule TamedWilds.Exploration do
                 damage_by_creature * Creature.incoming_damage_factor(creature)
 
               {:ok, _} =
-                UserAttributes.do_damage_to_companion(user, companion, round(damage_to_companion))
+                UserAttributes.do_damage_to_companion(
+                  user,
+                  companion,
+                  Math.round_probabilistic(damage_to_companion)
+                )
             end
 
-            case UserAttributes.do_damage(user, round(damage_to_user)) do
+            case UserAttributes.do_damage(user, Math.round_probabilistic(damage_to_user)) do
               {:ok, :dead} ->
                 # Also deletes exploration creature via cascade
                 {1, _} = Repo.delete_all(ExplorationCreature.associated_creature_query(user))
@@ -131,7 +136,7 @@ defmodule TamedWilds.Exploration do
           loot = creature_res.loot
 
           kill_experience =
-            round(creature_res.base_kill_experience * experience_factor(creature.level))
+            floor(creature_res.base_kill_experience * experience_factor(creature.level))
 
           :ok = Inventory.add_items(user, loot)
           :ok = UserAttributes.add_experience(user, kill_experience)
@@ -224,7 +229,7 @@ defmodule TamedWilds.Exploration do
                       )
 
                     experience_gain =
-                      round(
+                      floor(
                         Res.Creature.get_base_tame_experience(creature_res) *
                           experience_factor(taming_process.creature.level)
                       )
