@@ -7,7 +7,7 @@
     <% unspent_points = TamedWilds.UserAttributes.unspent_points(@user_attributes) %>
     <p>Level: <%= @user_attributes.level %></p>
     <%= if unspent_points > 0 do %>
-      <p><i>You have <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/character"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
+      <p><i class="opacity-75">You have <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/character"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
     <% end %>
     <progress class="progress progress-primary w-56" value={@user_attributes.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
   </div>
@@ -27,9 +27,9 @@
   <% unspent_points = TamedWilds.Creatures.Creature.unspent_points(companion) %>
 
   <div class="mb-4">
-    <p>Companion: <%= Res.Creature.get_by_res_id(companion.res_id).name %> (Level <%= companion.level %>)</p>
+    <p>Companion: <%= Res.Creature.get_by_res_id(companion.res_id).name %> (Level <%= companion.level %>) <.link href={~p"/camp/stoneheart/creatures/#{companion.id}"} class="inline-flex items-center text-primary">Go <span class="hero-chevron-right-mini"></span></.link></p>
     <%= if unspent_points > 0 do %>
-      <p><i>Your companion has <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/camp/stoneheart/creatures/#{companion.id}"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
+      <p><i class="opacity-75">Your companion has <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i></p>
     <% end %>
     <progress class="progress progress-primary w-56" value={companion.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress> <br />
     <progress class="progress progress-success w-56" value={companion.current_health} max={companion.max_health}></progress>
