@@ -131,7 +131,7 @@ defmodule TamedWilds.Creatures do
 
   defp roll_attributes(rolls) do
     Stream.repeatedly(fn -> Enum.random(0..4) end)
-    |> Stream.take(rolls - 1)
+    |> Stream.take(rolls)
     |> Enum.reduce({0, 0, 0, 0}, fn random_num, {hp, ep, dp, rp} ->
       case random_num do
         0 -> {hp, ep, dp, rp}
