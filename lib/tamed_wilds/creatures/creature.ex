@@ -25,6 +25,7 @@ defmodule TamedWilds.Creatures.Creature do
     field :experience, :integer
     field :level, :integer
     field :level_after_tamed, :integer
+    field :taming_effectiveness, :float
 
     field :health_points_wild, :integer
     field :energy_points_wild, :integer
@@ -54,12 +55,27 @@ defmodule TamedWilds.Creatures.Creature do
     from c in by_id(id), select: c
   end
 
-  def tame_changeset(%Creature{} = creature, %User{} = user, tamed_at) do
+  def tame_changeset(
+        %Creature{} = creature,
+        %User{} = user,
+        tamed_at,
+        level,
+        attribute_increases,
+        taming_effectiveness
+      ) do
+    {hp, ep, dp, rp} = attribute_increases
+
     creature
     |> change(
       tamed_by: user.id,
       tamed_at: tamed_at,
-      level_after_tamed: creature.level
+      level: level,
+      level_after_tamed: level,
+      taming_effectiveness: taming_effectiveness,
+      health_points_wild: creature.health_points_wild + hp,
+      energy_points_wild: creature.energy_points_wild + ep,
+      damage_points_wild: creature.damage_points_wild + dp,
+      resistance_points_wild: creature.resistance_points_wild + rp
     )
   end
 
@@ -111,8 +127,12 @@ defmodule TamedWilds.Creatures.Creature do
     round(factor_wild * factor_tamed * creature_res.base_max_health)
   end
 
+  def total_points_tamed(%Creature{} = creature) do
+    creature.level - creature.level_after_tamed
+  end
+
   def unspent_points(%Creature{} = creature) do
-    total_points_tamed = creature.level - creature.level_after_tamed
+    total_points_tamed = total_points_tamed(creature)
 
     unspent_points =
       total_points_tamed -

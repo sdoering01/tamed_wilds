@@ -208,7 +208,20 @@ defmodule TamedWilds.Exploration do
                   if taming_process.current_food_value + food_value >=
                        taming_process.food_value_to_tame do
                     {1, _} = Repo.delete_all(query)
-                    {:ok, _} = Creatures.tame_creature(user, taming_process.creature, now)
+
+                    # include the current feeding that is not reflected in the database yet
+                    taming_effectiveness =
+                      TamedWilds.Exploration.Taming.taming_effectiveness_factor(
+                        taming_process.feedings + 1
+                      )
+
+                    {:ok, _} =
+                      Creatures.tame_creature(
+                        user,
+                        taming_process.creature,
+                        now,
+                        taming_effectiveness
+                      )
 
                     experience_gain =
                       round(
@@ -225,7 +238,7 @@ defmodule TamedWilds.Exploration do
 
                     case Repo.update_all(query,
                            set: [next_feeding_at: next_feeding_at],
-                           inc: [current_food_value: food_value]
+                           inc: [current_food_value: food_value, feedings: 1]
                          ) do
                       {1, _} ->
                         {:ok, :creature_fed}
@@ -269,7 +282,7 @@ defmodule TamedWilds.Exploration do
       # TODO: Get this from the GameResource of the exploration area
       creature_level = Enum.random(1..5)
 
-      creature = random_creature(creature_res, creature_level)
+      creature = Creatures.random_creature(creature_res, creature_level)
 
       %ExplorationCreature{
         user_id: user.id,
@@ -277,38 +290,6 @@ defmodule TamedWilds.Exploration do
       }
       |> Repo.insert(on_conflict: :replace_all, conflict_target: [:user_id])
     end
-  end
-
-  defp random_creature(%Res.Creature{} = creature_res, level) do
-    {health_points, energy_points, damage_points, resistance_points} = randomize_attributes(level)
-
-    max_health = Creature.max_health_from_attributes(creature_res, health_points, 0)
-
-    creature = %Creature{
-      res_id: creature_res.res_id,
-      current_health: max_health,
-      max_health: max_health,
-      level: level,
-      health_points_wild: health_points,
-      energy_points_wild: energy_points,
-      damage_points_wild: damage_points,
-      resistance_points_wild: resistance_points
-    }
-
-    creature
-  end
-
-  defp randomize_attributes(level) do
-    Stream.repeatedly(fn -> Enum.random(1..4) end)
-    |> Stream.take(level - 1)
-    |> Enum.reduce({0, 0, 0, 0}, fn random_num, {hp, ep, dp, rp} ->
-      case random_num do
-        1 -> {hp + 1, ep, dp, rp}
-        2 -> {hp, ep + 1, dp, rp}
-        3 -> {hp, ep, dp + 1, rp}
-        4 -> {hp, ep, dp, rp + 1}
-      end
-    end)
   end
 
   defp experience_factor(level) do

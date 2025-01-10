@@ -9,6 +9,7 @@
   <% experience_for_current_level = CreatureLevel.get_experience_for_level(@creature, @creature.level) %>
   <% experience_for_next_level = CreatureLevel.get_experience_for_level(@creature, @creature.level + 1) %>
   <p>Level: <%= @creature.level %></p>
+  <p class="opacity-75">Taming effectiveness: <%= Float.round(@creature.taming_effectiveness * 100, 1) %>%</p>
   <progress class="progress progress-primary w-56" value={@creature.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
   <p>Experience: <%= @creature.experience %> / <%= experience_for_next_level %></p>
 </div>

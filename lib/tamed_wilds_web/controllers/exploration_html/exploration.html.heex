@@ -89,9 +89,13 @@
       <% creature_res = Res.Creature.get_by_res_id(taming_process.creature.res_id) %>
       <% seconds_left = DateTime.diff(taming_process.next_feeding_at, DateTime.utc_now()) %>
 
+      <% taming_effectiveness = TamedWilds.Exploration.Taming.taming_effectiveness_factor(taming_process.feedings) %>
+      <% level_gain = TamedWilds.Exploration.Taming.level_gain(taming_process.creature.level, taming_effectiveness) %>
+
       <li>
         <p><%= creature_res.name %> (Level <%= taming_process.creature.level %>)</p>
         <progress class="progress progress-primary w-56" value={taming_process.current_food_value} max={taming_process.food_value_to_tame}></progress>
+        <p class="opacity-75">Taming effectiveness: <%= Float.round(taming_effectiveness * 100, 1) %>% (+<%= level_gain %> <%= if level_gain == 1, do: "level", else: "levels" %>)</p>
         <br />
         <%= if seconds_left > 0 do %>
           <button class="btn btn-primary" disabled><%= seconds_left %>s until next feeding</button>
