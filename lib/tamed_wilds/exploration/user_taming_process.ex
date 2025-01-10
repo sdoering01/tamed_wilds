@@ -10,6 +10,7 @@ defmodule TamedWilds.Exploration.UserTamingProcess do
     field :started_at, :utc_datetime_usec
     field :next_feeding_at, :utc_datetime_usec
 
+    field :feedings, :integer
     field :current_food_value, :integer
     field :food_value_to_tame, :integer
 

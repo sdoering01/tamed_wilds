@@ -7,7 +7,7 @@
     <% unspent_points = TamedWilds.UserAttributes.unspent_points(@user_attributes) %>
     <p>Level: <%= @user_attributes.level %></p>
     <%= if unspent_points > 0 do %>
-      <p><i>You have <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/character"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
+      <p><i class="opacity-75">You have <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/character"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
     <% end %>
     <progress class="progress progress-primary w-56" value={@user_attributes.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress>
   </div>
@@ -27,9 +27,9 @@
   <% unspent_points = TamedWilds.Creatures.Creature.unspent_points(companion) %>
 
   <div class="mb-4">
-    <p>Companion: <%= Res.Creature.get_by_res_id(companion.res_id).name %> (Level <%= companion.level %>)</p>
+    <p>Companion: <%= Res.Creature.get_by_res_id(companion.res_id).name %> (Level <%= companion.level %>) <.link href={~p"/camp/stoneheart/creatures/#{companion.id}"} class="inline-flex items-center text-primary">Go <span class="hero-chevron-right-mini"></span></.link></p>
     <%= if unspent_points > 0 do %>
-      <p><i>Your companion has <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i> <.link href={~p"/camp/stoneheart/creatures/#{companion.id}"} class="inline-flex items-center text-primary">Spend <span class="hero-chevron-right-mini"></span></.link></p>
+      <p><i class="opacity-75">Your companion has <%= unspent_points %> unspent attribute <%= if unspent_points == 1, do: "point", else: "points" %>.</i></p>
     <% end %>
     <progress class="progress progress-primary w-56" value={companion.experience - experience_for_current_level} max={experience_for_next_level - experience_for_current_level}></progress> <br />
     <progress class="progress progress-success w-56" value={companion.current_health} max={companion.max_health}></progress>
@@ -89,34 +89,40 @@
       <% creature_res = Res.Creature.get_by_res_id(taming_process.creature.res_id) %>
       <% seconds_left = DateTime.diff(taming_process.next_feeding_at, DateTime.utc_now()) %>
 
+      <% taming_effectiveness = TamedWilds.Exploration.Taming.taming_effectiveness_factor(taming_process.feedings) %>
+      <% level_gain = TamedWilds.Exploration.Taming.level_gain(taming_process.creature.level, taming_effectiveness) %>
+
       <li>
         <p><%= creature_res.name %> (Level <%= taming_process.creature.level %>)</p>
         <progress class="progress progress-primary w-56" value={taming_process.current_food_value} max={taming_process.food_value_to_tame}></progress>
+        <p class="opacity-75">Taming effectiveness: <%= Float.round(taming_effectiveness * 100, 1) %>% (+<%= level_gain %> <%= if level_gain == 1, do: "level", else: "levels" %>)</p>
         <br />
-        <%= if seconds_left > 0 do %>
-          <button class="btn btn-primary" disabled><%= seconds_left %>s until next feeding</button>
-        <% else %>
-          <%= if map_size(@food_quantity_map) > 0 do %>
-            <%= for {item_res_id, quantity} <- @food_quantity_map do %>
-              <.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post" class="btn btn-primary">Feed <%= Res.Item.get_by_res_id(item_res_id).name %></.link>
-            <% end %>
-            <%!--
-              <div class="dropdown dropdown-top">
-                <div tabindex="0" role="button" class="btn btn-primary">Feed</div>
-                <ul tabindex="0" role="menu" class="dropdown-content menu mb-1 bg-base-200 rounded-box w-52 z-[1] border-2 border-primary">
-                  <%= for {item_res_id, quantity} <- @food_quantity_map do %>
-                    <%= if quantity > 0 do %>
-                      <li><.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post">Feed <%= Res.Item.get_by_res_id(item_res_id).name %></.link></li>
-                    <% end %>
-                  <% end %>
-                </ul>
-              </div>
-            --%>
+        <div class="flex items-center flex-wrap gap-1">
+          <%= if seconds_left > 0 do %>
+            <p><%= seconds_left %>s until next feeding</p>
           <% else %>
-            <button class="btn btn-primary" disabled>No food available</button>
+            <%= if map_size(@food_quantity_map) > 0 do %>
+              <%= for {item_res_id, quantity} <- @food_quantity_map do %>
+                <.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post" class="btn btn-primary">Feed <%= Res.Item.get_by_res_id(item_res_id).name %> (<%= quantity %>)</.link>
+              <% end %>
+              <%!--
+                <div class="dropdown dropdown-top">
+                  <div tabindex="0" role="button" class="btn btn-primary">Feed</div>
+                  <ul tabindex="0" role="menu" class="dropdown-content menu mb-1 bg-base-200 rounded-box w-52 z-[1] border-2 border-primary">
+                    <%= for {item_res_id, quantity} <- @food_quantity_map do %>
+                      <%= if quantity > 0 do %>
+                        <li><.link href={~p"/exploration/taming/feed?tp_id=#{taming_process.id}&item_res_id=#{item_res_id}"} method="post">Feed <%= Res.Item.get_by_res_id(item_res_id).name %></.link></li>
+                      <% end %>
+                    <% end %>
+                  </ul>
+                </div>
+              --%>
+            <% else %>
+              <button class="btn btn-primary" disabled>No food available</button>
+            <% end %>
           <% end %>
-        <% end %>
-        <.link href={~p"/exploration/taming/cancel?id=#{taming_process.id}"} method="post" data-confirm={"Do you really want to cancel taming #{creature_res.name}?"} class="btn btn-secondary">Cancel</.link>
+          <.link href={~p"/exploration/taming/cancel?id=#{taming_process.id}"} method="post" data-confirm={"Do you really want to cancel taming #{creature_res.name}?"} class="btn btn-secondary">Cancel</.link>
+        </div>
       </li>
     <% end %>
   </ul>

@@ -21,7 +21,8 @@ defmodule TamedWilds.UserAttributes.UserLevel do
   @level_experiences CompileTime.calculate_level_experiences()
 
   def get_experience_for_level(level) do
-    elem(@level_experiences, level - 1)
+    clamped_idx = min(CompileTime.max_level(), level) - 1
+    elem(@level_experiences, clamped_idx)
   end
 
   def has_level_up?(current_level, new_experience) do

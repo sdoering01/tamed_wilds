@@ -168,8 +168,12 @@ defmodule TamedWilds.UserAttributes do
     end
   end
 
+  def total_points(%UserAttributes{} = user_attributes) do
+    user_attributes.level - 1
+  end
+
   def unspent_points(%UserAttributes{} = user_attributes) do
-    total_points = user_attributes.level - 1
+    total_points = total_points(user_attributes)
 
     unspent_points =
       total_points -
