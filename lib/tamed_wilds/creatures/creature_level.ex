@@ -25,6 +25,10 @@ defmodule TamedWilds.Creatures.CreatureLevel do
 
   @level_experiences CompileTime.calculate_level_experiences()
 
+  def max_level_ups_after_tamed() do
+    CompileTime.max_level_ups_after_tamed()
+  end
+
   def get_experience_for_level(%Creature{} = creature, new_level) do
     diff = new_level - creature.level_after_tamed
 
